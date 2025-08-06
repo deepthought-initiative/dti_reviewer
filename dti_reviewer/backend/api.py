@@ -1,5 +1,5 @@
 import logging
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from tasks import query_experts_task
 from celery.result import AsyncResult
 from celery_app import celery
@@ -16,65 +16,40 @@ def search():
     Search for experts based on a research abstract.
     The endpoint processes the input query and returns a ranked list of experts
     whose work most closely matches the research abstract.
-    """
-    client_ip = request.environ.get("HTTP_X_FORWARDED_FOR", request.remote_addr)
-    logger.info(f"Search request received from {client_ip}")
-
+    """   
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         logger.debug(f"Request data received: {data}")
-
-        query = data.get("query", None) if data else None
-
-        if query is None:
-            logger.warning(f"Missing query parameter in request from {client_ip}")
-            return (
-                jsonify(message="Missing 'query' parameter", results=[]),
-                400,
-            )
-
-        query = query.strip()
-        logger.debug(f"Query after stripping: '{query}' (length: {len(query)})")
-
-        if not query:
-            logger.warning(f"Empty query received from {client_ip}")
-            return (
-                jsonify(message="Query cannot be empty", results=[]),
-                400,
-            )
+        
+        query = (data.get("query") or "").strip()
+        engine_id = (data.get("engine_id") or "").strip()
+        
+        for param in [query, engine_id]:
+            if not param:
+                logger.warning(f"Missing or empty {param} parameter in request")
+                return jsonify(message=f"Missing '{param}' parameter", results=[]), 400
 
         if len(query) < 3:
-            logger.warning(
-                f"Query too short from {client_ip}: '{query}' (length: {len(query)})"
-            )
-            return (
-                jsonify(message="Query too short. Minimum 3 characters", results=[]),
-                400,
-            )
+            logger.warning(f"Query too short: '{query}' (length: {len(query)})")
+            return jsonify(message="Query too short. Minimum 3 characters", results=[]), 400
+        
+        available_engines = current_app.config.get('available_engines', [])
+        if engine_id not in available_engines:
+            logger.warning(f"Invalid engine_id: {engine_id}")
+            return jsonify(
+                message="Invalid engine_id.", 
+                results=[]
+            ), 400
 
-        logger.info(
-            f"Processing valid query from {client_ip}: '{query[:100]}{'...' if len(query) > 100 else ''}'"
-        )
-
-        celery_task = query_experts_task.delay(query, top_n=25)
+        celery_task = query_experts_task.delay(query, engine_id=engine_id, top_n=25)
         task_id = celery_task.id
 
-        logger.info(
-            f"Celery task {task_id} submitted successfully for query from {client_ip}"
-        )
-
-        return (
-            jsonify(
-                message="Task submitted",
-                task_id=task_id,
-            ),
-            202,
-        )
-
+        logger.info(f"Celery task {task_id} submitted successfully")
+        
+        return jsonify(message="Task submitted", task_id=task_id), 202
+        
     except Exception as e:
-        logger.error(
-            f"Error processing search request from {client_ip}: {str(e)}", exc_info=True
-        )
+        logger.error(f"Error processing search request: {str(e)}", exc_info=True)
         return jsonify(message="Server error enqueuing task", task_id=None), 500
 
 
@@ -113,7 +88,6 @@ def task_status(task_id):
             )
             return jsonify(resp), 200
 
-        # Handle failure states (FAILURE, RETRY, REVOKED, etc.)
         error_info = str(async_result.info) if async_result.info else "Unknown error"
         resp["message"] = error_info
         logger.error(f"Task {task_id} failed with state {state}: {error_info}")
@@ -127,3 +101,18 @@ def task_status(task_id):
         return jsonify(
             {"state": "ERROR", "message": "Error retrieving task status"}
         ), 500
+
+@api_bp.route("/available_engines", methods=["GET"])
+def available_engines():
+    """
+    Get a list of available similarity engines.
+    """
+    try:
+        resp = {
+            "engines": current_app.config.get('available_engines', []),
+            "message": "Available similarity engines retrieved successfully"
+        }
+        return jsonify(resp), 200
+    except Exception as e:
+        logger.error(f"Error retrieving available engines: {str(e)}", exc_info=True)
+        return jsonify(message="Error retrieving available engines"), 500

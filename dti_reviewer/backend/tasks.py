@@ -1,5 +1,5 @@
 from celery_app import celery
-from similarity_engine import SimilarityEngine
+from similarity_engine import SimilarityEngineOrcid
 from sklearn.metrics.pairwise import cosine_similarity
 
 engine = None
@@ -7,7 +7,7 @@ engine = None
 def initialize_similarity_engine():
     global engine
     if engine is None:
-        engine = SimilarityEngine()
+        engine = SimilarityEngineOrcid()
         engine.load_index_or_build()
 
 

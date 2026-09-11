@@ -12,4 +12,5 @@ dependencies:
   - sphinx
   - celery
   - redis-py
+  - pytables
 

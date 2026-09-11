@@ -223,7 +223,7 @@ button:focus {
 th {
   background-color: var(--background);
   color: var(--muted-foreground);
-  padding: 1rem;
+  padding: 0.875rem 1.25rem;
   font-weight: 600;
   font-size: 0.89rem;
   text-transform: uppercase;
@@ -236,7 +236,7 @@ th {
 }
 
 td {
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
   word-wrap: break-word;

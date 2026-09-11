@@ -83,14 +83,14 @@ const FormPage = () => {
             <div className="w-4/5 m-auto grid grid-cols-5 gap-3">
                 {/* Row 1 */}
                 <div className="col-span-5 flex items-center justify-center lg:hidden">
-                    <img height="50" width="50" className="animate-wiggle animate-infinite" src={logo} />
+                    <img height="50" width="50" src={logo} />
                     <h1 className="font-bold text-center">DTI Reviewer</h1>
                 </div>
 
                 {/* Row 2 */}
                 <form
                     onSubmit={handleSubmit}
-                    className="grid grid-cols-1 md:grid-cols-5 border-none shadow-lg rounded-lg md:gap-4 col-span-5"
+                    className="grid grid-cols-1 md:grid-cols-5 border border-border rounded-lg md:gap-4 col-span-5"
                 >
                     <div className="md:col-span-5 p-6">
                         <h2>Find a physics expert</h2>
@@ -116,7 +116,7 @@ const FormPage = () => {
                 </form>
 
                 {/* Row 3 */}
-                <div className="col-span-5 border-none rounded-lg shadow-lg">
+                <div className="col-span-5 border border-border rounded-lg">
                     <div className="pl-4">
                         <h2>Search Results</h2>
                     </div>
@@ -144,7 +144,7 @@ const FormPage = () => {
                             </div>
                         ) : !hasSearched ? (
                             <div className="h-full flex flex-col items-center justify-center text-stone-500 p-12">
-                                <div className="w-20 h-20 rounded-full bg-gradient-to-br bg-stone-400 flex items-center justify-center mb-4">
+                                <div className="w-20 h-20 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
                                     <img src={Search} alt="Search icon" className="w-10 h-10" />
                                 </div>
                                 <p className="text-xl font-semibold mb-2">Ready to explore</p>

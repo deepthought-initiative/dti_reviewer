@@ -19,7 +19,7 @@ export default function Component() {
                     <div className="flex flex-col h-full">
                         {/* Header section */}
                         <div className="flex items-center p-6 border-b border-gray-200">
-                            <img height="40" width="40" className="animate-wiggle animate-infinite" src={logo} />
+                            <img height="40" width="40" src={logo} />
                             <h3 className="text-lg font-semibold text-gray-900">DTI Reviewer</h3>
                         </div>
 
@@ -51,7 +51,7 @@ export default function Component() {
                                 >
                                     <div className="flex items-center">
                                         <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                                        <img height="20" width="20" className="animate-wiggle animate-infinite mr-2" src={GITHUB} />
+                                        <img height="20" width="20" className="mr-2" src={GITHUB} />
                                         <span>GitHub</span>
                                     </div>
                                 </Link>
@@ -62,7 +62,7 @@ export default function Component() {
             </Sheet>
 
             <Link to="/" className="mr-6 hidden lg:flex items-center">
-                <img height="40" width="40" className="animate-wiggle animate-infinite" src={logo} />
+                <img height="40" width="40" src={logo} />
                 <h2>DTI Reviewer</h2>
             </Link>
 
@@ -83,7 +83,7 @@ export default function Component() {
                     to="https://github.com/deepthought-initiative/dti_reviewer"
                     className="group inline-flex h-9 w-max items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                    <img height="20" width="20" className="animate-wiggle animate-infinite mr-2" src={GITHUB} />
+                    <img height="20" width="20" className="mr-2" src={GITHUB} />
                     Code
                 </Link>
             </nav>

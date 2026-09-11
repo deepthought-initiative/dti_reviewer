@@ -1,0 +1,25 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: dti_reviewer/backend/environment.yml
+
+      - name: Run pytest
+        working-directory: dti_reviewer/backend
+        run: python -m pytest tests/ -v

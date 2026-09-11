@@ -31,7 +31,7 @@ services:
 
   frontend:
     build:
-      context: ./my-app
+      context: ./frontend
       dockerfile: Dockerfile
     image: dti_reviewer-frontend:latest
     ports:

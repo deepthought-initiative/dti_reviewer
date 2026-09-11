@@ -25,7 +25,7 @@ Installation
 
    .. code-block:: bash
 
-      cd deepreviewer/my-app
+      cd dti_reviewer/frontend
       npm install
 
 Running the Application
@@ -44,7 +44,7 @@ Running the Application
 
    .. code-block:: bash
 
-      cd deepreviewer/my-app
+      cd dti_reviewer/frontend
       npm run dev
 
 3. Access the frontend application at http://localhost:5173

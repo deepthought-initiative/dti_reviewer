@@ -19,7 +19,7 @@ Installation
 
       cd dti_reviewer/backend
       conda env create -f environment.yml
-      conda activate deepreviewer
+      conda activate dti_reviewer
 
 3. Set up the frontend:
 

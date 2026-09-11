@@ -1,0 +1,53 @@
+name: Docs
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install docs dependencies
+        run: pip install -r docs/requirements.txt
+
+      - name: Build the book
+        run: jupyter-book build docs
+
+      - name: Upload built docs
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-html
+          path: docs/_build/html
+
+      # main deploys to the site root, every other branch to branch/<name>/
+      - name: Set destination directory
+        if: github.event_name != 'pull_request'
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          if [[ "$BRANCH" == "main" ]]; then
+            echo "DEST_DIR=" >> "$GITHUB_ENV"
+          else
+            echo "DEST_DIR=branch/$BRANCH" >> "$GITHUB_ENV"
+          fi
+
+      - name: Deploy docs
+        if: github.event_name != 'pull_request'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html
+          destination_dir: ${{ env.DEST_DIR }}
+          keep_files: true

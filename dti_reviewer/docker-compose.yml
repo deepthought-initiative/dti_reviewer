@@ -1,8 +1,12 @@
-version: '3.8'
-
 services:
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   backend:
     build:
@@ -15,19 +19,34 @@ services:
     # ports:
     #   - "5000:5000"
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     restart: unless-stopped
+
+  index:
+    image: dti_reviewer-backend:latest
+    entrypoint: []
+    command: >-
+      conda run --no-capture-output -n dti_reviewer python -c
+      "from similarity_engine import SimilarityEngineOrcid; SimilarityEngineOrcid().load_index_or_build()"
+    volumes:
+      - expert-data:/app/expert-data
 
   worker:
     image: dti_reviewer-backend:latest
     entrypoint: []
-    command: conda run --no-capture-output -n dti_reviewer celery -A celery_app worker --loglevel=info
+    command: conda run --no-capture-output -n dti_reviewer celery -A celery_app worker --loglevel=info --concurrency=1
+    volumes:
+      - expert-data:/app/expert-data:ro
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
-      - redis
-      - backend
+      redis:
+        condition: service_healthy
+      index:
+        condition: service_completed_successfully
+    restart: unless-stopped
 
   frontend:
     build:
@@ -35,6 +54,10 @@ services:
       dockerfile: Dockerfile
     image: dti_reviewer-frontend:latest
     ports:
-      - "3000:80"
+      - "80:80"
     depends_on:
       - backend
+    restart: unless-stopped
+
+volumes:
+  expert-data:

@@ -1,7 +1,7 @@
 Architecture
 ============
 
-Deep Reviewer follows a modern architecture with a clear separation between the frontend and backend components.
+DTI Reviewer follows a modern architecture with a clear separation between the frontend and backend components.
 
 Components
 ----------

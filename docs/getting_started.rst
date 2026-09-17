@@ -1,7 +1,7 @@
 Getting Started
 ===============
 
-This guide will help you get Deep Reviewer up and running on your local machine.
+This guide will help you get DTI Reviewer up and running on your local machine.
 
 Installation
 ------------
@@ -10,22 +10,22 @@ Installation
 
    .. code-block:: bash
 
-      git clone https://github.com/yourusername/expert-finder.git
-      cd expert-finder
+      git clone https://github.com/deepthought-initiative/dti_reviewer.git
+      cd dti_reviewer
 
 2. Set up the backend:
 
    .. code-block:: bash
 
-      cd deepreviewer/backend
+      cd dti_reviewer/backend
       conda env create -f environment.yml
-      conda activate expert-finder
+      conda activate dti_reviewer
 
 3. Set up the frontend:
 
    .. code-block:: bash
 
-      cd deepreviewer/my-app
+      cd dti_reviewer/frontend
       npm install
 
 Running the Application
@@ -35,7 +35,7 @@ Running the Application
 
    .. code-block:: bash
 
-      cd deepreviewer/backend
+      cd dti_reviewer/backend
       flask --app app run
 
    The api would be running at http://127.0.0.1:5000
@@ -44,7 +44,7 @@ Running the Application
 
    .. code-block:: bash
 
-      cd deepreviewer/my-app
+      cd dti_reviewer/frontend
       npm run dev
 
 3. Access the frontend application at http://localhost:5173

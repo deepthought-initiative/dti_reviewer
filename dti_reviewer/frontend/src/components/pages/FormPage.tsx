@@ -35,17 +35,26 @@ const FormPage = () => {
         setPercent(null)
 
         try {
-            // 1) Enqueue the task
-            const resp = await fetch(`${API_BASE_URL}/search`, {
+            // 1) Vectorize the abstract
+            const vectorResp = await fetch(`${API_BASE_URL}/vectorize`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ query }),
+            })
+            if (!vectorResp.ok) throw new Error(`Vectorization failed: HTTP ${vectorResp.status}`)
+            const { vector_id } = await vectorResp.json()
+
+            // 2) Enqueue the search using the stored vector
+            const resp = await fetch(`${API_BASE_URL}/search`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ vector_id }),
             })
             if (!resp.ok) throw new Error(`Enqueue failed: HTTP ${resp.status}`)
             const { task_id } = await resp.json()
             taskIdRef.current = task_id
 
-            // 2) Poll for status
+            // 3) Poll for status
             while (true) {
                 const statusResp = await fetch(`${API_BASE_URL}/status/${task_id}`)
                 if (!statusResp.ok) {

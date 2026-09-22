@@ -80,8 +80,16 @@ class SimilarityEngineOrcid(BaseSimilarityEngine):
 
     def query_experts(self, query_text: str, top_n: int = 25):
         self.load_index_or_build()
-        q_vec = self.vectorizer.transform([query_text])
-        sims = cosine_similarity(q_vec, self.tfidf_matrix).flatten()
+        query_vector = self.vectorize(query_text)
+        return self.rank_experts(query_vector, top_n)
+
+    def vectorize(self, query_text: str):
+        """Convert query text using the fitted author-text vocabulary."""
+        return self.vectorizer.transform([query_text])
+
+    def rank_experts(self, query_vector, top_n: int = 25):
+        """Return the authors most similar to a query vector."""
+        sims = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
         top_indices = sims.argsort()[::-1][:top_n]
         top_authors = self.combined_texts.iloc[top_indices].copy()
         top_authors["similarity"] = sims[top_indices]
@@ -112,4 +120,3 @@ class SimilarityEngineOrcid(BaseSimilarityEngine):
         results = results.merge(name_variations, on="@path", how="left")
         results = results.rename(columns={"@path": "orcid"})
         return results
-

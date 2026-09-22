@@ -25,11 +25,14 @@ services:
       - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:-}
     volumes:
       - reviewer-db:/app/instance
+      - expert-data:/app/expert-data:ro
     # ports:
     #   - "5000:5000"
     depends_on:
       redis:
         condition: service_healthy
+      index:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   index:

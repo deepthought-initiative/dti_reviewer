@@ -16,11 +16,15 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - expert-data:/app/expert-data:ro
     # ports:
     #   - "5000:5000"
     depends_on:
       redis:
         condition: service_healthy
+      index:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   index:

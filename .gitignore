@@ -82,3 +82,5 @@ Desktop.ini
 *.log
 # Generated data (corpus + built index)
 expert-data/
+
+instance/

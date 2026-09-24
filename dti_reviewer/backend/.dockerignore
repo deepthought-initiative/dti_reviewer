@@ -6,3 +6,5 @@ expert-data/
 .git/
 .env
 .env.*
+
+instance/

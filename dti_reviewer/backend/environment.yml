@@ -3,6 +3,9 @@ channels:
   - conda-forge
 dependencies:
   - flask
+  - flask-login
+  - authlib
+  - flask-wtf
   - pandas
   - scipy
   - scikit-learn

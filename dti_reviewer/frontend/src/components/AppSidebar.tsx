@@ -17,12 +17,12 @@ const GitHubIcon = () => <img src={GITHUB} alt="GitHub" className="w-5 h-5" />
 const items = [
   {
     title: "Home",
-    url: "/",
+    url: import.meta.env.BASE_URL,
     icon: Home,
   },
   {
     title: "About",
-    url: "/about",
+    url: `${import.meta.env.BASE_URL}about`,
     icon: Info,
   },
   {

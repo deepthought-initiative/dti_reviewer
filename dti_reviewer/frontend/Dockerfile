@@ -7,6 +7,7 @@ RUN npm ci
 
 # 2) Copy source and build
 COPY . .
+ARG APP_BASE_PATH=/
 RUN npm run build    # outputs to /app/dist
 
 # ─── Stage 2: Serve with Nginx ─────────────────────────────────

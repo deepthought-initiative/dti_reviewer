@@ -12,7 +12,7 @@ export default function LoginPage() {
     const [busy, setBusy] = useState(false)
 
     async function refreshSession() {
-        const response = await fetch("/auth/session")
+        const response = await fetch(`${import.meta.env.BASE_URL}auth/session`)
         if (!response.ok) throw new Error("Unable to load login. Please reload the page.")
         setSession(await response.json())
     }
@@ -28,7 +28,7 @@ export default function LoginPage() {
         setBusy(true)
         setError("")
         try {
-            const response = await fetch(session.user_id ? "/auth/logout" : "/auth/login", {
+            const response = await fetch(`${import.meta.env.BASE_URL}auth/${session.user_id ? "logout" : "login"}`, {
                 method: "POST",
                 headers: { "X-CSRFToken": session.csrf_token },
                 body: data,
@@ -62,7 +62,7 @@ export default function LoginPage() {
                     <Button disabled={busy} type="submit">Log out</Button>
                 </form>
             ) : session.auth_mode === "oidc" ? (
-                <Button asChild><a href="/auth/login">Continue with your identity provider</a></Button>
+                <Button asChild><a href={`${import.meta.env.BASE_URL}auth/login`}>Continue with your identity provider</a></Button>
             ) : (
                 <form onSubmit={submit} className="space-y-4">
                     <div>

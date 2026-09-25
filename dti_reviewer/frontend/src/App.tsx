@@ -11,7 +11,7 @@ function RequireLogin() {
 
   useEffect(() => {
     let active = true
-    fetch("/auth/session")
+    fetch(`${import.meta.env.BASE_URL}auth/session`)
       .then(async (response) => {
         if (!response.ok) throw new Error("Session check failed")
         const session = await response.json()

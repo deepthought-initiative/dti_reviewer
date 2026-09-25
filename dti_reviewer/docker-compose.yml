@@ -18,6 +18,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY to a persistent random secret}
       - AUTH_MODE=${AUTH_MODE:-local}
+      - APP_BASE_PATH=${APP_BASE_PATH:-/}
       - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-false}
       - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-}
       - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}
@@ -64,6 +65,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        APP_BASE_PATH: ${APP_BASE_PATH:-/}
     image: dti_reviewer-frontend:latest
     ports:
       - "80:80"

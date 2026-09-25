@@ -16,7 +16,15 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY to a persistent random secret}
+      - AUTH_MODE=${AUTH_MODE:-local}
+      - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-false}
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}
+      - OIDC_METADATA_URL=${OIDC_METADATA_URL:-}
+      - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:-}
     volumes:
+      - reviewer-db:/app/instance
       - expert-data:/app/expert-data:ro
     # ports:
     #   - "5000:5000"
@@ -64,4 +72,5 @@ services:
     restart: unless-stopped
 
 volumes:
+  reviewer-db:
   expert-data:

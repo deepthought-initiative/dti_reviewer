@@ -65,7 +65,10 @@ export default function Component() {
                 <h2>DTI Reviewer</h2>
             </Link>
 
-            <nav className="ml-auto hidden lg:flex gap-6">
+            <Button asChild variant="outline" className="ml-auto mr-4">
+                <Link to="/login">Login / account</Link>
+            </Button>
+            <nav className="hidden lg:flex gap-6">
                 <Link
                     to="/"
                     className="group inline-flex h-9 w-max items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"

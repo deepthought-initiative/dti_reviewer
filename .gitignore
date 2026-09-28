@@ -80,3 +80,7 @@ Desktop.ini
 
 # Logs
 *.log
+# Generated data (corpus + built index)
+expert-data/
+
+instance/

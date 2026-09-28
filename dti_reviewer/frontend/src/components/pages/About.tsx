@@ -1,6 +1,6 @@
 const About = () => {
     return (
-        <main className="max-w-4xl mx-auto p-6 space-y-8">
+        <main className="max-w-4xl mx-auto px-6 py-16 space-y-12">
             <section>
                 <h1 className="text-3xl font-bold mb-4">About DTI Reviewer</h1>
                 <p>

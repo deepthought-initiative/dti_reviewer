@@ -32,10 +32,10 @@ export function ResultTable({ dataToDisplay }: ResultTableProps) {
       <Table id="searchTable">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px] sticky top-0 z-10 bg-primary text-primary-foreground">S.No.</TableHead>
-            <TableHead className="sticky top-0 z-10 bg-primary text-primary-foreground">Author name</TableHead>
-            <TableHead className="sticky top-0 z-10 bg-primary text-primary-foreground">Orcid</TableHead>
-            <TableHead className="sticky top-0 z-10 bg-primary text-primary-foreground">Similarity</TableHead>
+            <TableHead className="w-[100px] sticky top-0 z-10">S.No.</TableHead>
+            <TableHead className="sticky top-0 z-10">Author name</TableHead>
+            <TableHead className="sticky top-0 z-10">Orcid</TableHead>
+            <TableHead className="sticky top-0 z-10">Similarity</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

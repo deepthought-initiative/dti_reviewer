@@ -16,6 +16,7 @@ def create_app(test_config=None):
         SECRET_KEY=os.environ.get("SECRET_KEY"),
         DATABASE=os.environ.get("DATABASE", str(Path(app.instance_path) / "reviewer.sqlite")),
         AUTH_MODE=os.environ.get("AUTH_MODE", "local"),
+        APPLICATION_ROOT=os.environ.get("APP_BASE_PATH", "/").rstrip("/") + "/",
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=(

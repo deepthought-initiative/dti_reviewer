@@ -3,10 +3,21 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vitest/config";
 
-// https://vite.dev/config/
+const base = (process.env.APP_BASE_PATH || "/").replace(/\/+$/, "") + "/"
+const apiProxy = {
+  target: "http://localhost:5000",
+  rewrite: (path: string) => path.slice(base.length - 1),
+}
+
 export default defineConfig({
+  base,
   server: {
-    proxy: { "/auth": "http://localhost:5000" },
+    proxy: {
+      [`${base}auth/`]: apiProxy,
+      [`${base}vectorize`]: apiProxy,
+      [`${base}search`]: apiProxy,
+      [`${base}status/`]: apiProxy,
+    },
   },
   plugins: [react(), tailwindcss()],
   test: {

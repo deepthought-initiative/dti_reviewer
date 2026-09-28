@@ -5,6 +5,9 @@ import { defineConfig } from "vitest/config";
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: { "/auth": "http://localhost:5000" },
+  },
   plugins: [react(), tailwindcss()],
   test: {
     globals: true,

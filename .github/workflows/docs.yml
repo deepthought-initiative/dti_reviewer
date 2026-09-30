@@ -12,6 +12,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -22,22 +24,24 @@ jobs:
       - name: Install docs dependencies
         run: pip install -r docs/requirements.txt
 
-      - name: Build the book
-        run: jupyter-book build docs
+      - name: Build docs
+        run: sphinx-build -W --keep-going -b html docs docs/_build/html
 
       - name: Upload built docs
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: docs-html
+          if-no-files-found: error
           path: docs/_build/html
 
-      # main deploys to the site root, every other branch to branch/<name>/
       - name: Set destination directory
         if: github.event_name != 'pull_request'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           BRANCH="${GITHUB_REF#refs/heads/}"
-          if [[ "$BRANCH" == "main" ]]; then
+          if [[ "$BRANCH" == "$DEFAULT_BRANCH" ]]; then
             echo "DEST_DIR=" >> "$GITHUB_ENV"
           else
             echo "DEST_DIR=branch/$BRANCH" >> "$GITHUB_ENV"

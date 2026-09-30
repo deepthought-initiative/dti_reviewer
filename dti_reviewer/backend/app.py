@@ -10,6 +10,29 @@ from db import init_db
 
 
 def create_app(test_config=None):
+    """Create the Flask application and initialize its database and authentication.
+
+    Parameters
+    ----------
+    test_config : mapping, optional
+        These settings override the defaults read from environment variables.
+        If omitted, the app reads ``config.py`` from its instance directory.
+
+    Returns
+    -------
+    flask.Flask
+        The app is ready to handle login and API requests.
+
+    Raises
+    ------
+    ValueError
+        The app raises this error if ``SECRET_KEY`` is missing, ``AUTH_MODE``
+        is invalid, or required external login settings are missing.
+
+    Notes
+    -----
+    This function also creates the database directory and user table.
+    """
     app = Flask(__name__, instance_relative_config=True)
     CORS(app, origins="*")
     app.config.from_mapping(

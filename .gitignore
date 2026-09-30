@@ -84,3 +84,7 @@ Desktop.ini
 expert-data/
 
 instance/
+
+# Generated documentation
+docs/_build/
+docs/autoapi/

@@ -13,6 +13,7 @@ dependencies:
   - gunicorn
   - pytest
   - sphinx
+  - sphinx-autoapi
   - celery
   - redis-py
   - pytables

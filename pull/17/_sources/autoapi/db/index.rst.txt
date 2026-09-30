@@ -1,0 +1,54 @@
+db
+==
+
+.. py:module:: db
+
+
+
+
+Module Contents
+---------------
+
+.. py:function:: get_db()
+
+   Open the app's database connection, or reuse it if it is already open.
+
+   :returns: The connection lets callers read columns by name and checks foreign
+             keys. It waits up to five seconds when the database is locked.
+   :rtype: sqlite3.Connection
+
+   .. rubric:: Notes
+
+   Flask must know which app's ``DATABASE`` setting to use. It sets this up
+   during requests. In a standalone script, call this function inside
+   ``with app.app_context():``. Calls within that block share one connection.
+
+
+.. py:function:: close_db(error=None)
+
+   Close the database connection that Flask opened for this request or block.
+
+   :param error: Flask supplies any error that occurred while handling the request.
+                 This function does not use it.
+   :type error: BaseException, optional
+
+   .. rubric:: Notes
+
+   This function does nothing if no connection was opened. It does not save
+   any uncommitted database changes.
+
+
+.. py:function:: init_db(app)
+
+   Create the users table and arrange for Flask to close database connections.
+
+   :param app: The app's ``DATABASE`` setting gives the path to the SQLite file.
+   :type app: flask.Flask
+
+   .. rubric:: Notes
+
+   This function creates the database directory and users table if needed.
+   It enables SQLite's write-ahead log so reads can continue during a write.
+   It does not change the structure of an existing table.
+
+

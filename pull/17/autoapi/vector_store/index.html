@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>vector_store &#8212; dti_reviewer  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="similarity_engine" href="../similarity_engine/index.html" />
+    <link rel="prev" title="celery_app" href="../celery_app/index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-vector_store">
+<span id="vector-store"></span><h1>vector_store<a class="headerlink" href="#module-vector_store" title="Link to this heading">¶</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="vector_store.VECTOR_TTL_SECONDS">
+<span class="sig-prename descclassname"><span class="pre">vector_store.</span></span><span class="sig-name descname"><span class="pre">VECTOR_TTL_SECONDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3600</span></span><a class="headerlink" href="#vector_store.VECTOR_TTL_SECONDS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="vector_store.redis_client">
+<span class="sig-prename descclassname"><span class="pre">vector_store.</span></span><span class="sig-name descname"><span class="pre">redis_client</span></span><a class="headerlink" href="#vector_store.redis_client" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vector_store.save_vector">
+<span class="sig-prename descclassname"><span class="pre">vector_store.</span></span><span class="sig-name descname"><span class="pre">save_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">scipy.sparse.csr_matrix</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#vector_store.save_vector" title="Link to this definition">¶</a></dt>
+<dd><p>Save a query vector in Redis for later use.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>vector</strong> (<em>scipy.sparse.csr_matrix</em>) – This is the query vector to save.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The new ID can be passed to <code class="docutils literal notranslate"><span class="pre">load_vector</span></code> to retrieve the vector.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The vector is saved as JSON and expires after <code class="docutils literal notranslate"><span class="pre">VECTOR_TTL_SECONDS</span></code>,
+currently one hour. Storage errors are not caught here.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="vector_store.load_vector">
+<span class="sig-prename descclassname"><span class="pre">vector_store.</span></span><span class="sig-name descname"><span class="pre">load_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">scipy.sparse.csr_matrix</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#vector_store.load_vector" title="Link to this definition">¶</a></dt>
+<dd><p>Load a query vector from Redis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>vector_id</strong> (<em>str</em>) – This is the vector ID returned by <code class="docutils literal notranslate"><span class="pre">save_vector</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result is the saved vector, or None if it is missing or has expired.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>scipy.sparse.csr_matrix or None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Loading a vector does not extend its expiry time. Errors from Redis or
+invalid stored data are not caught here.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">dti_reviewer</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../db/index.html">db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app/index.html">app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/index.html">api</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auth/index.html">auth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../celery_app/index.html">celery_app</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">vector_store</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../similarity_engine/index.html">similarity_engine</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">API Reference</a><ul>
+      <li>Previous: <a href="../celery_app/index.html" title="previous chapter">celery_app</a></li>
+      <li>Next: <a href="../similarity_engine/index.html" title="next chapter">similarity_engine</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/autoapi/vector_store/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

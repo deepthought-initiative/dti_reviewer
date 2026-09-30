@@ -13,7 +13,23 @@ redis_client = Redis.from_url(
 
 
 def save_vector(vector: sparse.csr_matrix) -> str:
-    """Store a sparse query vector temporarily and return its identifier."""
+    """Save a query vector in Redis for later use.
+
+    Parameters
+    ----------
+    vector : scipy.sparse.csr_matrix
+        This is the query vector to save.
+
+    Returns
+    -------
+    str
+        The new ID can be passed to ``load_vector`` to retrieve the vector.
+
+    Notes
+    -----
+    The vector is saved as JSON and expires after ``VECTOR_TTL_SECONDS``,
+    currently one hour. Storage errors are not caught here.
+    """
     vector_id = str(uuid4())
     payload = {
         "data": vector.data.tolist(),
@@ -30,7 +46,23 @@ def save_vector(vector: sparse.csr_matrix) -> str:
 
 
 def load_vector(vector_id: str) -> sparse.csr_matrix | None:
-    """Load a stored query vector, or return None after it expires."""
+    """Load a query vector from Redis.
+
+    Parameters
+    ----------
+    vector_id : str
+        This is the vector ID returned by ``save_vector``.
+
+    Returns
+    -------
+    scipy.sparse.csr_matrix or None
+        The result is the saved vector, or None if it is missing or has expired.
+
+    Notes
+    -----
+    Loading a vector does not extend its expiry time. Errors from Redis or
+    invalid stored data are not caught here.
+    """
     stored_vector = redis_client.get(f"query-vector:{vector_id}")
     if stored_vector is None:
         return None

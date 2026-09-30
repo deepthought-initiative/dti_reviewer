@@ -12,7 +12,27 @@ api_bp = Blueprint("api", __name__)
 
 
 def get_query(client_ip):
-    """Read and validate a query from the current request."""
+    """Read and validate the query in the current JSON request.
+
+    Parameters
+    ----------
+    client_ip : str or None
+        This address identifies the client in log messages.
+
+    Returns
+    -------
+    query : str or None
+        The query has surrounding spaces removed. It is None if validation fails.
+    error : tuple of (flask.Response, int) or None
+        This contains a JSON error message and status 400 if validation fails.
+        It is None when the query is valid.
+
+    Notes
+    -----
+    Call this function while Flask is handling a request. The JSON body should
+    be an object with a ``query`` string containing at least three characters
+    after spaces are removed. Errors from reading the JSON are not caught here.
+    """
     data = request.get_json()
     query = data.get("query") if data else None
 
@@ -39,7 +59,20 @@ def get_query(client_ip):
 
 @api_bp.route("/vectorize", methods=["POST"])
 def vectorize():
-    """Vectorize an abstract and temporarily store the vector in Redis."""
+    """Handle POST /vectorize by storing a query vector in Redis.
+
+    Returns
+    -------
+    tuple of (flask.Response, int)
+        The response contains ``vector_id`` and status 201 on success. Invalid
+        queries return status 400. Other errors return status 500.
+
+    Notes
+    -----
+    The request body supplies ``query``. It must contain at least three
+    characters after surrounding spaces are removed. The stored vector expires
+    after one hour. Errors from reading the JSON also return status 500.
+    """
     client_ip = request.environ.get("HTTP_X_FORWARDED_FOR", request.remote_addr)
     logger.info(f"Search request received from {client_ip}")
 
@@ -62,7 +95,21 @@ def vectorize():
 
 @api_bp.route("/search", methods=["POST"])
 def search():
-    """Submit an expert search using a vector stored in Redis."""
+    """Handle POST /search by queuing a search for a stored vector.
+
+    Returns
+    -------
+    tuple of (flask.Response, int)
+        The response contains ``message``, ``task_id``, and status 202 when the
+        search is queued. An invalid vector ID returns status 400. Other errors
+        return status 500.
+
+    Notes
+    -----
+    The JSON body must supply a nonempty ``vector_id`` string. The worker
+    checks whether the vector exists and finds up to 25 matches. Errors from
+    reading the JSON return status 500.
+    """
     client_ip = request.environ.get("HTTP_X_FORWARDED_FOR", request.remote_addr)
 
     try:
@@ -84,8 +131,25 @@ def search():
 
 @api_bp.route("/status/<task_id>", methods=["GET"])
 def task_status(task_id):
-    """
-    Get the status of a submitted task.
+    """Handle GET /status/<task_id> by reading the Celery task result.
+
+    Parameters
+    ----------
+    task_id : str
+        This is the task ID supplied in the URL.
+
+    Returns
+    -------
+    tuple of (flask.Response, int)
+        The JSON response always includes ``state``. PENDING and PROGRESS return
+        status 202, and PROGRESS also includes ``percent``. SUCCESS includes
+        ``results`` and returns status 200. Other states return an error message
+        and status 500. A failed status lookup returns state ERROR and status 500.
+
+    Notes
+    -----
+    The ``percent`` value is a fraction: 0.5 means 50 percent. Unknown task IDs
+    usually appear as PENDING too.
     """
     client_ip = request.environ.get("HTTP_X_FORWARDED_FOR", request.remote_addr)
     logger.info(f"Status check for task {task_id} from {client_ip}")

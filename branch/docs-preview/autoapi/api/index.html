@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>api &#8212; dti_reviewer  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="auth" href="../auth/index.html" />
+    <link rel="prev" title="app" href="../app/index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-api">
+<span id="api"></span><h1>api<a class="headerlink" href="#module-api" title="Link to this heading">¶</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="api.logger">
+<span class="sig-prename descclassname"><span class="pre">api.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#api.logger" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="api.api_bp">
+<span class="sig-prename descclassname"><span class="pre">api.</span></span><span class="sig-name descname"><span class="pre">api_bp</span></span><a class="headerlink" href="#api.api_bp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="api.get_query">
+<span class="sig-prename descclassname"><span class="pre">api.</span></span><span class="sig-name descname"><span class="pre">get_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api.get_query" title="Link to this definition">¶</a></dt>
+<dd><p>Read and validate the query in the current JSON request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client_ip</strong> (<em>str</em><em> or </em><em>None</em>) – This address identifies the client in log messages.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>query</strong> (<em>str or None</em>) – The query has surrounding spaces removed. It is None if validation fails.</p></li>
+<li><p><strong>error</strong> (<em>tuple of (flask.Response, int) or None</em>) – This contains a JSON error message and status 400 if validation fails.
+It is None when the query is valid.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Call this function while Flask is handling a request. The JSON body should
+be an object with a <code class="docutils literal notranslate"><span class="pre">query</span></code> string containing at least three characters
+after spaces are removed. Errors from reading the JSON are not caught here.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="api.vectorize">
+<span class="sig-prename descclassname"><span class="pre">api.</span></span><span class="sig-name descname"><span class="pre">vectorize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api.vectorize" title="Link to this definition">¶</a></dt>
+<dd><p>Handle POST /vectorize by storing a query vector in Redis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The response contains <code class="docutils literal notranslate"><span class="pre">vector_id</span></code> and status 201 on success. Invalid
+queries return status 400. Other errors return status 500.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple of (flask.Response, int)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The request body supplies <code class="docutils literal notranslate"><span class="pre">query</span></code>. It must contain at least three
+characters after surrounding spaces are removed. The stored vector expires
+after one hour. Errors from reading the JSON also return status 500.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="api.search">
+<span class="sig-prename descclassname"><span class="pre">api.</span></span><span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api.search" title="Link to this definition">¶</a></dt>
+<dd><p>Handle POST /search by queuing a search for a stored vector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The response contains <code class="docutils literal notranslate"><span class="pre">message</span></code>, <code class="docutils literal notranslate"><span class="pre">task_id</span></code>, and status 202 when the
+search is queued. An invalid vector ID returns status 400. Other errors
+return status 500.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple of (flask.Response, int)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The JSON body must supply a nonempty <code class="docutils literal notranslate"><span class="pre">vector_id</span></code> string. The worker
+checks whether the vector exists and finds up to 25 matches. Errors from
+reading the JSON return status 500.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="api.task_status">
+<span class="sig-prename descclassname"><span class="pre">api.</span></span><span class="sig-name descname"><span class="pre">task_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api.task_status" title="Link to this definition">¶</a></dt>
+<dd><p>Handle GET /status/&lt;task_id&gt; by reading the Celery task result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>task_id</strong> (<em>str</em>) – This is the task ID supplied in the URL.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The JSON response always includes <code class="docutils literal notranslate"><span class="pre">state</span></code>. PENDING and PROGRESS return
+status 202, and PROGRESS also includes <code class="docutils literal notranslate"><span class="pre">percent</span></code>. SUCCESS includes
+<code class="docutils literal notranslate"><span class="pre">results</span></code> and returns status 200. Other states return an error message
+and status 500. A failed status lookup returns state ERROR and status 500.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of (flask.Response, int)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">percent</span></code> value is a fraction: 0.5 means 50 percent. Unknown task IDs
+usually appear as PENDING too.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">dti_reviewer</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../db/index.html">db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app/index.html">app</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">api</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auth/index.html">auth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../celery_app/index.html">celery_app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../vector_store/index.html">vector_store</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../similarity_engine/index.html">similarity_engine</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">API Reference</a><ul>
+      <li>Previous: <a href="../app/index.html" title="previous chapter">app</a></li>
+      <li>Next: <a href="../auth/index.html" title="next chapter">auth</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/autoapi/api/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

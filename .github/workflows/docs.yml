@@ -93,10 +93,6 @@ jobs:
           body: |
             <!-- dti-reviewer:docs-preview -->
 
-            Documentation build: **${{ needs.build.result }}**
-            Preview deployment: **${{ steps.deploy.outcome }}**
-            Revision: `${{ github.event.pull_request.head.sha }}`
+            Hi human,
 
-            ${{ steps.deploy.outcome == 'success' && format('[View API documentation](https://{0}.github.io/{1}/pull/{2}/)', github.repository_owner, github.event.repository.name, github.event.pull_request.number) || 'No preview was published for this revision.' }}
-
-            [Workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            ${{ steps.deploy.outcome == 'success' && format('Your docs are ready! [Take a look here](https://{0}.github.io/{1}/pull/{2}/).', github.repository_owner, github.event.repository.name, github.event.pull_request.number) || format('I could not publish your docs this time. [Check the build logs](https://github.com/{0}/actions/runs/{1}) for details.', github.repository, github.run_id) }}

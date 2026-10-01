@@ -87,7 +87,7 @@ const FormPage = () => {
     }
     return (
         <>
-            <div className="w-4/5 max-w-5xl m-auto grid grid-cols-5 gap-10 py-12">
+            <div className="max-w-5xl mx-auto px-6 grid grid-cols-5 gap-6 py-8">
                 {/* Row 1 */}
                 <div className="col-span-5 flex items-center justify-center gap-3 lg:hidden">
                     <img height="60" width="60" src={logo} />
@@ -99,7 +99,7 @@ const FormPage = () => {
                     onSubmit={handleSubmit}
                     className="grid grid-cols-1 md:grid-cols-5 border border-border rounded-lg md:gap-4 col-span-5"
                 >
-                    <div className="md:col-span-5 p-8">
+                    <div className="md:col-span-5 p-6">
                         <h2>Find a physics expert</h2>
                         <p className="text-gray-600">
                             Paste a research abstract or topic below to discover similar physics researchers.
@@ -109,27 +109,28 @@ const FormPage = () => {
                             placeholder="Paste your research abstract or topic here…"
                             value={query}
                             onChange={handleQuery}
-                            className="mt-6 mb-4 w-full min-h-[50px] md:min-h-[60px] resize-y max-h-[300px]"
+                            className="mt-5 mb-4 w-full min-h-32 resize-y max-h-[300px]"
                             required
                         />
                         <Button
                             type="submit"
                             disabled={loading}
-                            className={`w-full ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-primary hover:bg-primary/90"}`}
+                            className="flex w-full sm:ml-auto sm:w-fit sm:px-6"
                         >
+                            <MagnifyingGlass size={16} aria-hidden="true" />
                             <strong>{loading ? <span>Searching…</span> : <span>Search</span>}</strong>
                         </Button>
                     </div>
                 </form>
 
                 {/* Row 3 */}
-                <div className="col-span-5 border border-border rounded-lg">
-                    <div className="px-8 pt-8 pb-2">
-                        <h2>Search Results</h2>
+                <div className="col-span-5 min-h-0 flex flex-col border border-border rounded-lg">
+                    <div className="shrink-0 px-6 pt-5 pb-2">
+                        <h2 className="text-lg!">Results</h2>
                     </div>
-                    <div className="overflow-y-auto h-[50vh] max-h-[60vh]">
+                    <div className="min-h-0 overflow-y-auto max-h-[60vh]">
                         {loading ? (
-                            <div className="flex flex-col items-center justify-center h-full">
+                            <div className="flex flex-col items-center justify-center py-12">
                                 {percent === null ? (
                                     <>
                                         <div
@@ -150,22 +151,16 @@ const FormPage = () => {
                                 )}
                             </div>
                         ) : !hasSearched ? (
-                            <div className="h-full flex flex-col items-center justify-center text-stone-500 p-12">
-                                <div className="w-20 h-20 rounded-full bg-neutral-100 flex items-center justify-center mb-6">
-                                    <MagnifyingGlass size={40} />
-                                </div>
-                                <p className="text-xl font-semibold mb-2">Ready to explore</p>
-                                <p className="text-base text-stone-400">
-                                    Enter your paragraph above to begin analysis
-                                </p>
+                            <div className="px-6 pb-6 text-muted-foreground">
+                                <p>Paste an abstract above to see researchers ranked by similarity.</p>
                             </div>
                         ) : tableData.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full">
+                            <div className="flex flex-col items-center justify-center py-12">
                                 <FileDashed size={48} className="mb-4 text-neutral-400" />
                                 <p className="text-center text-lg">No results</p>
                             </div>
                         ) : (
-                            <div className="px-8 pb-8">
+                            <div className="px-6 pb-6">
                                 <ResultTable dataToDisplay={tableData} />
                             </div>
                         )}

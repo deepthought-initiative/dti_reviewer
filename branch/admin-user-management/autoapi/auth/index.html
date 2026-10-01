@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>auth &#8212; dti_reviewer  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="tasks" href="../tasks/index.html" />
+    <link rel="prev" title="api" href="../api/index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-auth">
+<span id="auth"></span><h1>auth<a class="headerlink" href="#module-auth" title="Link to this heading">¶</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="auth.auth_bp">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">auth_bp</span></span><a class="headerlink" href="#auth.auth_bp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="auth.login_manager">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">login_manager</span></span><a class="headerlink" href="#auth.login_manager" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="auth.oauth">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">oauth</span></span><a class="headerlink" href="#auth.oauth" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="auth.User">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">User</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auth.User" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">flask_login.UserMixin</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="auth.User.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#auth.User.id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="auth.User.is_admin">
+<span class="sig-name descname"><span class="pre">is_admin</span></span><a class="headerlink" href="#auth.User.is_admin" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="auth.User.session_id">
+<span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#auth.User.session_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="auth.User.get_id">
+<span class="sig-name descname"><span class="pre">get_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auth.User.get_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="auth.load_user">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">load_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auth.load_user" title="Link to this definition">¶</a></dt>
+<dd><p>Find the logged-in user by their revocable session identifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>user_id</strong> (<em>str</em>) – Flask-Login supplies this identifier from the session.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result is the matching user, or None if the user no longer exists.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#auth.User" title="auth.User">User</a> or None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Flask must know which app is using the database. It sets this up during
+requests. In a standalone script, call this inside <code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">app.app_context():</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="auth.unauthorized">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">unauthorized</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auth.unauthorized" title="Link to this definition">¶</a></dt>
+<dd><p>Return an error telling the client to log in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The response contains <code class="docutils literal notranslate"><span class="pre">message=&quot;Login</span> <span class="pre">required&quot;</span></code> and status 401.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple of (flask.Response, int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="auth.protect_auth">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">protect_auth</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auth.protect_auth" title="Link to this definition">¶</a></dt>
+<dd><p>Check the CSRF token before handling an unsafe request under /auth.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>flask_wtf.csrf.CSRFError</strong> – The check raises this error if the CSRF token is missing or invalid.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The CSRF token helps prevent another website from submitting a request
+using the user’s login session.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="auth.user_session">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">user_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auth.user_session" title="Link to this definition">¶</a></dt>
+<dd><p>Return the login status and CSRF token for GET /auth/session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The JSON response contains <code class="docutils literal notranslate"><span class="pre">user_id</span></code>, <code class="docutils literal notranslate"><span class="pre">auth_mode</span></code>, and <code class="docutils literal notranslate"><span class="pre">csrf_token</span></code>
+with status 200. The user ID is null when nobody is logged in. The browser
+is told not to cache this response.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>flask.Response</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="auth.login">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">login</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auth.login" title="Link to this definition">¶</a></dt>
+<dd><p>Handle login requests at /auth/login.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>GET sends the browser to the external provider or the local login page.
+POST logs in a local user and returns status 200 on success. It returns
+status 401 for an incorrect username or password, or status 400 when
+external login is enabled.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>flask.Response or tuple of (flask.Response, int)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>POST requests supply <code class="docutils literal notranslate"><span class="pre">username</span></code> and <code class="docutils literal notranslate"><span class="pre">password</span></code> as form fields and
+need a valid CSRF token. Successful login replaces the previous session.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="auth.callback">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">callback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auth.callback" title="Link to this definition">¶</a></dt>
+<dd><p>Finish an external login when the provider calls /auth/callback.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Successful login sends the browser to the home page. The response has
+status 404 if external login is disabled, or status 400 if exchanging
+the login token fails.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>flask.Response or tuple of (flask.Response, int)</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The provider name and its user ID identify the local user record. This
+function creates that record if needed and replaces the previous session.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="auth.logout">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">logout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auth.logout" title="Link to this definition">¶</a></dt>
+<dd><p>Log out the user and clear their session at POST /auth/logout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The response contains <code class="docutils literal notranslate"><span class="pre">message=&quot;Logged</span> <span class="pre">out&quot;</span></code> and status 200.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>flask.Response</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The request needs a valid CSRF token.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="auth.create_user">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">create_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">admin</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auth.create_user" title="Link to this definition">¶</a></dt>
+<dd><p>Add a local user with the Flask create-user command.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>username</strong> (<em>str</em>) – The username is saved after surrounding spaces are removed.</p></li>
+<li><p><strong>password</strong> (<em>str</em>) – The password is hashed before it is saved. The command asks the user
+to enter it twice.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>click.ClickException</strong> – The command raises this error if either value is empty or the username
+already exists.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The command saves the new user and prints a confirmation. Run it through
+the Flask CLI so Flask can select the app’s database.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="auth.promote_user">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">promote_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auth.promote_user" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="auth.init_auth">
+<span class="sig-prename descclassname"><span class="pre">auth.</span></span><span class="sig-name descname"><span class="pre">init_auth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auth.init_auth" title="Link to this definition">¶</a></dt>
+<dd><p>Set up login, logout, and the user creation command for the app.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>app</strong> (<em>flask.Flask</em>) – The app supplies <code class="docutils literal notranslate"><span class="pre">AUTH_MODE</span></code> and the settings for external login.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Setup raises this error if the mode is not <code class="docutils literal notranslate"><span class="pre">local</span></code> or <code class="docutils literal notranslate"><span class="pre">oidc</span></code>, or
+a required external login setting is missing.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">oidc</span></code> mode connects to an external login provider. The <code class="docutils literal notranslate"><span class="pre">local</span></code>
+mode prepares a dummy password hash so unknown usernames still go through
+a password check.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">dti_reviewer</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../db/index.html">db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app/index.html">app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/index.html">api</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">auth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/index.html">admin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../celery_app/index.html">celery_app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../vector_store/index.html">vector_store</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../similarity_engine/index.html">similarity_engine</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">API Reference</a><ul>
+      <li>Previous: <a href="../api/index.html" title="previous chapter">api</a></li>
+      <li>Next: <a href="../tasks/index.html" title="next chapter">tasks</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/autoapi/auth/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

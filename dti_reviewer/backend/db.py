@@ -57,7 +57,6 @@ def init_db(app):
     -----
     This function creates the database directory and users table if needed.
     It enables SQLite's write-ahead log so reads can continue during a write.
-    It does not change the structure of an existing table.
     """
     app.teardown_appcontext(close_db)
     Path(app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
@@ -71,6 +70,9 @@ def init_db(app):
                 password_hash TEXT,
                 issuer TEXT,
                 subject TEXT,
+                is_admin INTEGER NOT NULL DEFAULT 0,
+                is_blocked INTEGER NOT NULL DEFAULT 0,
+                session_id TEXT NOT NULL UNIQUE,
                 UNIQUE (issuer, subject)
             );
         """)

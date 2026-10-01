@@ -1,4 +1,5 @@
 import { useState, useRef, type ChangeEvent } from "react"
+import { useNavigate } from "react-router-dom"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { ResultTable } from "../ResultTable"
@@ -7,6 +8,7 @@ import logo from "../../assets/logo.png"
 
 
 const FormPage = () => {
+    const navigate = useNavigate()
     const [query, setQuery] = useState<string>("")
     const [tableData, setTableData] = useState<[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -17,12 +19,6 @@ const FormPage = () => {
     const handleQuery = (e: ChangeEvent<HTMLTextAreaElement>): void => {
         setQuery(e.target.value)
     }
-
-
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ""
-
-    // uncomment this in development
-    // const API_BASE_URL = "http://localhost:5000"
 
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -36,27 +32,30 @@ const FormPage = () => {
 
         try {
             // 1) Vectorize the abstract
-            const vectorResp = await fetch(`${API_BASE_URL}/vectorize`, {
+            const vectorResp = await fetch("/vectorize", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ query }),
             })
+            if (vectorResp.status === 401) return navigate("/login", { replace: true })
             if (!vectorResp.ok) throw new Error(`Vectorization failed: HTTP ${vectorResp.status}`)
             const { vector_id } = await vectorResp.json()
 
             // 2) Enqueue the search using the stored vector
-            const resp = await fetch(`${API_BASE_URL}/search`, {
+            const resp = await fetch("/search", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ vector_id }),
             })
+            if (resp.status === 401) return navigate("/login", { replace: true })
             if (!resp.ok) throw new Error(`Enqueue failed: HTTP ${resp.status}`)
             const { task_id } = await resp.json()
             taskIdRef.current = task_id
 
             // 3) Poll for status
             while (true) {
-                const statusResp = await fetch(`${API_BASE_URL}/status/${task_id}`)
+                const statusResp = await fetch(`/status/${task_id}`)
+                if (statusResp.status === 401) return navigate("/login", { replace: true })
                 if (!statusResp.ok) {
                     console.error("Status check error", await statusResp.text())
                     break

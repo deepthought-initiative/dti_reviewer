@@ -1,5 +1,6 @@
 import logging
 from flask import Blueprint, request, jsonify
+from flask_login import login_required
 from tasks import initialize_similarity_engine, query_experts_task
 from vector_store import save_vector
 from celery.result import AsyncResult
@@ -9,6 +10,12 @@ from celery_app import celery
 logger = logging.getLogger(__name__)
 
 api_bp = Blueprint("api", __name__)
+
+
+@api_bp.before_request
+@login_required
+def require_login():
+    return None
 
 
 def get_query(client_ip):

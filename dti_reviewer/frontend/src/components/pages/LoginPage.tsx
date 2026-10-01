@@ -1,12 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import Navbar from "../Navbar"
 
-type Session = { user_id: string | null; auth_mode: string; csrf_token: string }
+export type Session = { user_id: string | null; auth_mode: string; csrf_token: string; is_admin: boolean }
 
 export default function LoginPage() {
     const navigate = useNavigate()
+    const location = useLocation()
     const [session, setSession] = useState<Session | null>(null)
     const [error, setError] = useState("")
     const [busy, setBusy] = useState(false)
@@ -51,14 +53,20 @@ export default function LoginPage() {
     }
 
     return (
+        <>
+        <Navbar isAdmin={Boolean(session?.user_id && session.is_admin)} />
         <main className="max-w-md mx-auto my-12 p-8 border border-border rounded-lg">
             <h1 className="text-2xl font-semibold mb-6">{session?.user_id ? "Account" : "Log in"}</h1>
+            {location.state?.passwordChanged && <p role="status" className="mb-4">Password changed. Log in with your new password.</p>}
             {error && <p role="alert" className="mb-4 text-red-700">{error}</p>}
             {!session ? (
                 !error && <p role="status">Loading…</p>
             ) : session.user_id ? (
                 <form onSubmit={submit} className="space-y-4">
                     <p>You are signed in. <Link to="/" className="underline">Return to search</Link></p>
+                    {session.is_admin && (
+                        <p><Link to="/admin" className="underline">Manage users</Link></p>
+                    )}
                     <Button disabled={busy} type="submit">Log out</Button>
                 </form>
             ) : session.auth_mode === "oidc" ? (
@@ -77,5 +85,6 @@ export default function LoginPage() {
                 </form>
             )}
         </main>
+        </>
     )
 }

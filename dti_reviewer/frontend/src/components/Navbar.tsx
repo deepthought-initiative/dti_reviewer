@@ -4,7 +4,7 @@ import { Link } from "react-router-dom"
 import { GithubLogo, List } from "@phosphor-icons/react"
 import logo from "../assets/logo.png"
 
-export default function Component() {
+export default function Component({ isAdmin }: { isAdmin: boolean }) {
     return (
         <header className="flex h-20 w-full shrink-0 items-center px-6 md:px-8">
             <Sheet>
@@ -68,6 +68,11 @@ export default function Component() {
             <Button asChild variant="outline" className="ml-auto mr-4">
                 <Link to="/login">Login / account</Link>
             </Button>
+            {isAdmin && (
+                <Button asChild variant="outline" className="mr-4">
+                    <Link to="/admin">Admin</Link>
+                </Button>
+            )}
             <nav className="hidden lg:flex gap-6">
                 <Link
                     to="/"

@@ -1,4 +1,5 @@
 import sqlite3
+from secrets import token_hex
 
 import click
 from authlib.integrations.flask_client import OAuth
@@ -13,10 +14,12 @@ from flask_login import (
 from flask_wtf.csrf import generate_csrf
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from admin import admin_bp
 from db import get_db
 
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+auth_bp.register_blueprint(admin_bp)
 login_manager = LoginManager()
 oauth = OAuth()
 
@@ -28,19 +31,24 @@ class User(UserMixin):
         Parameters
         ----------
         row : sqlite3.Row
-            This row must contain the user's ``id``.
+            This row contains ``id``, ``is_admin``, and ``session_id``.
         """
         self.id = row["id"]
+        self.is_admin = bool(row["is_admin"])
+        self.session_id = row["session_id"]
+
+    def get_id(self):
+        return self.session_id
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Find the logged-in user in the database by their ID.
+    """Find the logged-in user by their revocable session identifier.
 
     Parameters
     ----------
     user_id : str
-        Flask-Login supplies this user ID from the session.
+        Flask-Login supplies this identifier from the session.
 
     Returns
     -------
@@ -52,8 +60,10 @@ def load_user(user_id):
     Flask must know which app is using the database. It sets this up during
     requests. In a standalone script, call this inside ``with app.app_context():``.
     """
-    row = get_db().execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
-    return User(row) if row else None
+    row = get_db().execute(
+        "SELECT * FROM users WHERE session_id = ?", (user_id,)
+    ).fetchone()
+    return User(row) if row and not row["is_blocked"] else None
 
 
 @login_manager.unauthorized_handler
@@ -70,7 +80,7 @@ def unauthorized():
 
 @auth_bp.before_request
 def protect_auth():
-    """Check the CSRF token before handling a POST request under /auth.
+    """Check the CSRF token before handling an unsafe request under /auth.
 
     Raises
     ------
@@ -80,9 +90,9 @@ def protect_auth():
     Notes
     -----
     The CSRF token helps prevent another website from submitting a request
-    using the user's login session. This check applies only to POST requests.
+    using the user's login session.
     """
-    if request.method == "POST":
+    if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
         current_app.extensions["csrf"].protect()
 
 
@@ -98,8 +108,9 @@ def user_session():
         is told not to cache this response.
     """
     response = jsonify(
-        user_id=current_user.get_id(),
+        user_id=str(current_user.id) if current_user.is_authenticated else None,
         auth_mode=current_app.config["AUTH_MODE"],
+        is_admin=current_user.is_authenticated and current_user.is_admin,
         csrf_token=generate_csrf(),
     )
     response.headers["Cache-Control"] = "no-store"
@@ -140,7 +151,7 @@ def login():
         password_hash or current_app.config["DUMMY_PASSWORD_HASH"],
         request.form.get("password", ""),
     )
-    if not password_hash or not valid:
+    if not password_hash or not valid or row["is_blocked"]:
         return jsonify(message="Invalid username or password"), 401
     session.clear()
     login_user(User(row))
@@ -173,14 +184,16 @@ def callback():
     db = get_db()
     with db:
         db.execute(
-            "INSERT INTO users (issuer, subject) VALUES (?, ?) "
+            "INSERT INTO users (issuer, subject, session_id) VALUES (?, ?, ?) "
             "ON CONFLICT (issuer, subject) DO NOTHING",
-            (identity["iss"], identity["sub"]),
+            (identity["iss"], identity["sub"], token_hex(32)),
         )
     row = db.execute(
         "SELECT * FROM users WHERE issuer = ? AND subject = ?",
         (identity["iss"], identity["sub"]),
     ).fetchone()
+    if row["is_blocked"]:
+        return jsonify(message="Account is blocked"), 403
     session.clear()
     login_user(User(row))
     return redirect("/")
@@ -207,8 +220,9 @@ def logout():
 @click.command("create-user")
 @click.argument("username")
 @click.password_option(confirmation_prompt=True)
+@click.option("--admin", is_flag=True)
 @with_appcontext
-def create_user(username, password):
+def create_user(username, password, admin):
     """Add a local user with the Flask create-user command.
 
     Parameters
@@ -238,12 +252,28 @@ def create_user(username, password):
     try:
         with db:
             db.execute(
-                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                (username, password_hash),
+                "INSERT INTO users (username, password_hash, is_admin, session_id) "
+                "VALUES (?, ?, ?, ?)",
+                (username, password_hash, admin, token_hex(32)),
             )
     except sqlite3.IntegrityError as error:
         raise click.ClickException("Username already exists.") from error
     click.echo(f"Created user {username}")
+
+
+
+@click.command("promote-user")
+@click.argument("user_id", type=click.IntRange(1, 9223372036854775807))
+@with_appcontext
+def promote_user(user_id):
+    db = get_db()
+    with db:
+        result = db.execute(
+            "UPDATE users SET is_admin = 1 WHERE id = ?", (user_id,)
+        )
+    if not result.rowcount:
+        raise click.ClickException("User not found.")
+    click.echo(f"User {user_id} is now an admin")
 
 
 def init_auth(app):
@@ -268,6 +298,7 @@ def init_auth(app):
     """
     login_manager.init_app(app)
     app.cli.add_command(create_user)
+    app.cli.add_command(promote_user)
     app.register_blueprint(auth_bp)
     if app.config["AUTH_MODE"] not in {"local", "oidc"}:
         raise ValueError("AUTH_MODE must be local or oidc")

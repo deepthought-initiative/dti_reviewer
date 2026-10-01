@@ -6,7 +6,12 @@ import { defineConfig } from "vitest/config";
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    proxy: { "/auth": "http://localhost:5000" },
+    proxy: {
+      "/auth": "http://localhost:5000",
+      "/vectorize": "http://localhost:5000",
+      "/search": "http://localhost:5000",
+      "/status": "http://localhost:5000",
+    },
   },
   plugins: [react(), tailwindcss()],
   test: {

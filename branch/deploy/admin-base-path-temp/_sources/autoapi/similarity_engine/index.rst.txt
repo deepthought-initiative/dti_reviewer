@@ -1,0 +1,181 @@
+similarity_engine
+=================
+
+.. py:module:: similarity_engine
+
+
+
+
+Module Contents
+---------------
+
+.. py:class:: BaseSimilarityEngine
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+
+   .. py:attribute:: name
+      :value: 'BaseSimilarityEngine'
+
+
+
+   .. py:attribute:: description
+      :value: 'Base class for similarity engines'
+
+
+
+   .. py:method:: query_experts(query_text: str, top_n: int = 25)
+      :abstractmethod:
+
+
+      Require subclasses to provide their own expert search method.
+
+      :param query_text: The search uses this research text to find matching experts.
+      :type query_text: str
+      :param top_n: The caller requests this many matches. The default is 25.
+      :type top_n: int, optional
+
+      :raises NotImplementedError: This base method always raises an error. Each subclass must replace
+          it with a method that performs the search.
+
+
+
+.. py:class:: SimilarityEngineOrcid
+
+   Bases: :py:obj:`BaseSimilarityEngine`
+
+
+   A class to handle the similarity engine for expert authors.
+   It builds and queries a TF-IDF index of author texts.
+
+
+   .. py:attribute:: dataset_path
+
+
+   .. py:attribute:: index_dir
+
+
+   .. py:attribute:: vectorizer
+      :value: None
+
+
+
+   .. py:attribute:: tfidf_matrix
+      :value: None
+
+
+
+   .. py:attribute:: combined_texts
+      :value: None
+
+
+
+   .. py:attribute:: authors
+      :value: None
+
+
+
+   .. py:method:: combine_texts(group)
+
+      Join one author's publication titles and abstracts into a single text.
+
+      :param group: These publication rows must have ``title`` and ``abstract`` columns.
+                    Missing values are treated as empty strings.
+      :type group: pandas.DataFrame
+
+      :returns: The result has one entry named ``text``. It contains the publication
+                texts joined with spaces.
+      :rtype: pandas.Series
+
+
+
+   .. py:method:: build_and_save_index()
+
+      Build the author search index and save it to disk.
+
+      .. rubric:: Notes
+
+      This method reads ``dataset_path`` and groups publications by author ID
+      (``@path``). It builds a TF-IDF index using up to 10,000 terms and ignores
+      common English words. It saves the index and author data in ``index_dir``,
+      replacing any existing files. Call ``load_index_or_build`` to load them.
+
+
+
+   .. py:method:: load_index_or_build()
+
+      Load the saved search index, or build it if any required file is missing.
+
+      .. rubric:: Notes
+
+      Every call reads the index and author data from disk. If a required file
+      is missing, all four files are rebuilt. Existing files are reused even if
+      the dataset has changed. Only load pickle files from a trusted source.
+
+
+
+   .. py:method:: query_experts(query_text: str, top_n: int = 25)
+
+      Find the authors whose publications best match a research abstract.
+
+      :param query_text: The search compares this text with the authors' publications.
+      :type query_text: str
+      :param top_n: This limits the number of matches. The default is 25. Use zero or a
+                    positive value for a normal result limit.
+      :type top_n: int, optional
+
+      :returns: The table lists the best matches first. Its columns are ``orcid``,
+                ``author``, ``similarity``, and ``name_variations``.
+      :rtype: pandas.DataFrame
+
+      .. rubric:: Notes
+
+      This method reloads the index on every call. It passes ``top_n`` to
+      ``rank_experts`` without checking the value.
+
+
+
+   .. py:method:: vectorize(query_text: str)
+
+      Convert research text into a TF-IDF vector for the search.
+
+      :param query_text: This is the research text to convert.
+      :type query_text: str
+
+      :returns: The matrix has one row and one column for each term in the vocabulary.
+      :rtype: scipy.sparse.csr_matrix
+
+      .. rubric:: Notes
+
+      Call ``load_index_or_build`` first. Words that are not in the index
+      vocabulary are ignored.
+
+
+
+   .. py:method:: rank_experts(query_vector, top_n: int = 25)
+
+      Compare a query vector with the authors and return the closest matches.
+
+      :param query_vector: The matrix must have one row and use the same vocabulary as the index.
+      :type query_vector: scipy.sparse.spmatrix or numpy.ndarray
+      :param top_n: This limits the number of matches. The default is 25. Zero returns no
+                    matches. A negative value drops that many authors from the end of the
+                    sorted list.
+      :type top_n: int, optional
+
+      :returns: The table lists the best matches first. Each row contains ``orcid``,
+                ``author``, ``similarity``, and ``name_variations``. The author name is
+                the first recorded name; name variations are unique and sorted.
+      :rtype: pandas.DataFrame
+
+      .. rubric:: Notes
+
+      Call ``load_index_or_build`` first. Matches with a similarity score of
+      zero can still appear if they fall within the requested limit.
+
+
+

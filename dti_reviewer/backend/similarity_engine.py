@@ -10,9 +10,25 @@ class BaseSimilarityEngine(ABC):
     name = "BaseSimilarityEngine"
     description = "Base class for similarity engines"
     def __init__(self):
+        """Create the base engine without loading any data."""
         pass
     @abstractmethod
     def query_experts(self, query_text: str, top_n: int = 25):
+        """Require subclasses to provide their own expert search method.
+
+        Parameters
+        ----------
+        query_text : str
+            The search uses this research text to find matching experts.
+        top_n : int, optional
+            The caller requests this many matches. The default is 25.
+
+        Raises
+        ------
+        NotImplementedError
+            This base method always raises an error. Each subclass must replace
+            it with a method that performs the search.
+        """
         raise NotImplementedError("Subclasses must implement this method")
     
 class SimilarityEngineOrcid(BaseSimilarityEngine):
@@ -22,6 +38,13 @@ class SimilarityEngineOrcid(BaseSimilarityEngine):
     """
 
     def __init__(self):
+        """Set the dataset paths and leave the search index unloaded.
+
+        Notes
+        -----
+        The paths start from the directory where the program is running. Creating
+        the engine does not read any files.
+        """
         self.dataset_path = Path("expert-data/LSPO_v1.h5")
         self.index_dir = Path("expert-data/indexed-data")
 
@@ -31,12 +54,35 @@ class SimilarityEngineOrcid(BaseSimilarityEngine):
         self.authors = None
 
     def combine_texts(self, group):
+        """Join one author's publication titles and abstracts into a single text.
+
+        Parameters
+        ----------
+        group : pandas.DataFrame
+            These publication rows must have ``title`` and ``abstract`` columns.
+            Missing values are treated as empty strings.
+
+        Returns
+        -------
+        pandas.Series
+            The result has one entry named ``text``. It contains the publication
+            texts joined with spaces.
+        """
         combined = (
             group["title"].fillna("") + " " + group["abstract"].fillna("")
         ).str.strip()
         return pd.Series({"text": " ".join(combined)})
 
     def build_and_save_index(self):
+        """Build the author search index and save it to disk.
+
+        Notes
+        -----
+        This method reads ``dataset_path`` and groups publications by author ID
+        (``@path``). It builds a TF-IDF index using up to 10,000 terms and ignores
+        common English words. It saves the index and author data in ``index_dir``,
+        replacing any existing files. Call ``load_index_or_build`` to load them.
+        """
         authors = pd.read_hdf(self.dataset_path)
         combined_texts = (
             authors.groupby("@path").apply(self.combine_texts).reset_index()
@@ -60,6 +106,14 @@ class SimilarityEngineOrcid(BaseSimilarityEngine):
         print("✓ Index built and saved successfully!")
 
     def load_index_or_build(self):
+        """Load the saved search index, or build it if any required file is missing.
+
+        Notes
+        -----
+        Every call reads the index and author data from disk. If a required file
+        is missing, all four files are rebuilt. Existing files are reused even if
+        the dataset has changed. Only load pickle files from a trusted source.
+        """
         required = [
             "tfidf_matrix.npz",
             "vectorizer.pkl",
@@ -79,16 +133,75 @@ class SimilarityEngineOrcid(BaseSimilarityEngine):
             self.authors = pickle.load(f)
 
     def query_experts(self, query_text: str, top_n: int = 25):
+        """Find the authors whose publications best match a research abstract.
+
+        Parameters
+        ----------
+        query_text : str
+            The search compares this text with the authors' publications.
+        top_n : int, optional
+            This limits the number of matches. The default is 25. Use zero or a
+            positive value for a normal result limit.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The table lists the best matches first. Its columns are ``orcid``,
+            ``author``, ``similarity``, and ``name_variations``.
+
+        Notes
+        -----
+        This method reloads the index on every call. It passes ``top_n`` to
+        ``rank_experts`` without checking the value.
+        """
         self.load_index_or_build()
         query_vector = self.vectorize(query_text)
         return self.rank_experts(query_vector, top_n)
 
     def vectorize(self, query_text: str):
-        """Convert query text using the fitted author-text vocabulary."""
+        """Convert research text into a TF-IDF vector for the search.
+
+        Parameters
+        ----------
+        query_text : str
+            This is the research text to convert.
+
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            The matrix has one row and one column for each term in the vocabulary.
+
+        Notes
+        -----
+        Call ``load_index_or_build`` first. Words that are not in the index
+        vocabulary are ignored.
+        """
         return self.vectorizer.transform([query_text])
 
     def rank_experts(self, query_vector, top_n: int = 25):
-        """Return the authors most similar to a query vector."""
+        """Compare a query vector with the authors and return the closest matches.
+
+        Parameters
+        ----------
+        query_vector : scipy.sparse.spmatrix or numpy.ndarray
+            The matrix must have one row and use the same vocabulary as the index.
+        top_n : int, optional
+            This limits the number of matches. The default is 25. Zero returns no
+            matches. A negative value drops that many authors from the end of the
+            sorted list.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The table lists the best matches first. Each row contains ``orcid``,
+            ``author``, ``similarity``, and ``name_variations``. The author name is
+            the first recorded name; name variations are unique and sorted.
+
+        Notes
+        -----
+        Call ``load_index_or_build`` first. Matches with a similarity score of
+        zero can still appear if they fall within the requested limit.
+        """
         sims = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
         top_indices = sims.argsort()[::-1][:top_n]
         top_authors = self.combined_texts.iloc[top_indices].copy()

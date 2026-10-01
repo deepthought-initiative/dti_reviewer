@@ -48,7 +48,7 @@ export function ResultTable({ dataToDisplay }: ResultTableProps) {
                   href={`https://orcid.org/${authorInfo.orcid}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-600 hover:underline"
+                  className="text-primary hover:underline"
                 >
                   {authorInfo.orcid.slice(1)}
                 </a>

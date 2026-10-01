@@ -1,94 +1,48 @@
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Link } from "react-router-dom"
+import { Link, NavLink } from "react-router-dom"
 import { GithubLogo, List } from "@phosphor-icons/react"
 import logo from "../assets/logo.png"
 
-export default function Component() {
+export default function Component({ isAdmin }: { isAdmin: boolean }) {
     return (
-        <header className="flex h-20 w-full shrink-0 items-center px-6 md:px-8">
+        <header className="flex h-20 w-full shrink-0 items-center gap-2 border-b border-border px-4 md:px-6">
             <Sheet>
                 <SheetTrigger asChild>
                     <Button variant="outline" size="icon" className="lg:hidden">
-                        <List />
+                        <List aria-hidden="true" />
                         <span className="sr-only">Toggle navigation menu</span>
                     </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-72 p-0">
-                    <div className="flex flex-col h-full">
-                        {/* Header section */}
-                        <div className="flex items-center gap-3 p-6 border-b border-gray-200">
-                            <img height="48" width="48" src={logo} />
-                            <h3 className="text-lg font-semibold text-gray-900">DTI Reviewer</h3>
+                    <div className="flex h-full flex-col">
+                        <div className="flex items-center gap-3 border-b border-border p-6">
+                            <img height="40" width="40" src={logo} alt="" />
+                            <span className="font-semibold">DTI Reviewer</span>
                         </div>
-
-                        {/* Navigation links */}
-                        <nav className="flex-1 p-4">
-                            <div className="space-y-2">
-                                <Link
-                                    to="/"
-                                    className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 group"
-                                >
-                                    <div className="flex items-center">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                                        <span>Home</span>
-                                    </div>
-                                </Link>
-
-                                <Link
-                                    to="/about"
-                                    className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 group"
-                                >
-                                    <div className="flex items-center">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                                        <span>About Us</span>
-                                    </div>
-                                </Link>
-                                <Link
-                                    to="https://github.com/deepthought-initiative/dti_reviewer"
-                                    className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 group"
-                                >
-                                    <div className="flex items-center">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                                        <GithubLogo size={20} className="mr-2" />
-                                        <span>GitHub</span>
-                                    </div>
-                                </Link>
-                            </div>
+                        <nav className="flex flex-col gap-1 p-4" aria-label="Mobile navigation">
+                            <Button asChild variant="ghost" className="justify-start"><NavLink to="/" end className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Home</NavLink></Button>
+                            <Button asChild variant="ghost" className="justify-start"><NavLink to="/about" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">About Us</NavLink></Button>
+                            <Button asChild variant="ghost" className="justify-start"><a href="https://github.com/deepthought-initiative/dti_reviewer" target="_blank" rel="noopener noreferrer"><GithubLogo size={18} aria-hidden="true" />GitHub</a></Button>
                         </nav>
                     </div>
                 </SheetContent>
             </Sheet>
-
-            <Link to="/" className="mr-6 hidden lg:flex items-center gap-3">
-                <img height="48" width="48" src={logo} />
-                <h2>DTI Reviewer</h2>
+            <Link to="/" className="mr-auto hidden items-center gap-2 lg:flex">
+                <img height="36" width="36" src={logo} alt="" />
+                <span className="font-semibold">DTI Reviewer</span>
             </Link>
-
-            <Button asChild variant="outline" className="ml-auto mr-4">
-                <Link to="/login">Login / account</Link>
-            </Button>
-            <nav className="hidden lg:flex gap-6">
-                <Link
-                    to="/"
-                    className="group inline-flex h-9 w-max items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                    Home
-                </Link>
-                <Link
-                    to="/about"
-                    className="group inline-flex h-9 w-max items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                    About Us
-                </Link>
-                <Link
-                    to="https://github.com/deepthought-initiative/dti_reviewer"
-                    className="group inline-flex h-9 w-max items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                    <GithubLogo size={20} className="mr-2" />
-                    Code
-                </Link>
+            <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
+                <Button asChild variant="ghost"><NavLink to="/" end className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Home</NavLink></Button>
+                <Button asChild variant="ghost"><NavLink to="/about" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">About Us</NavLink></Button>
+                <Button asChild variant="ghost"><a href="https://github.com/deepthought-initiative/dti_reviewer" target="_blank" rel="noopener noreferrer"><GithubLogo size={18} aria-hidden="true" />Code</a></Button>
             </nav>
+            <div className="ml-auto flex items-center gap-2 lg:ml-2">
+                <Button asChild variant="outline"><NavLink to="/login" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Login / account</NavLink></Button>
+                {isAdmin && (
+                    <Button asChild variant="outline"><NavLink to="/admin" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Admin</NavLink></Button>
+                )}
+            </div>
         </header>
     )
 }

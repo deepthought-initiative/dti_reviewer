@@ -12,6 +12,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -22,32 +24,75 @@ jobs:
       - name: Install docs dependencies
         run: pip install -r docs/requirements.txt
 
-      - name: Build the book
-        run: jupyter-book build docs
+      - name: Build docs
+        run: sphinx-build -W --keep-going -b html docs docs/_build/html
 
       - name: Upload built docs
-        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: docs-html
+          if-no-files-found: error
           path: docs/_build/html
 
-      # main deploys to the site root, every other branch to branch/<name>/
+  publish:
+    needs: build
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Download built docs
+        if: needs.build.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-html
+          path: ${{ runner.temp }}/docs-artifact
+
       - name: Set destination directory
-        if: github.event_name != 'pull_request'
+        if: needs.build.result == 'success'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           BRANCH="${GITHUB_REF#refs/heads/}"
-          if [[ "$BRANCH" == "main" ]]; then
+          if [[ -n "$PR_NUMBER" ]]; then
+            echo "DEST_DIR=pull/$PR_NUMBER" >> "$GITHUB_ENV"
+          elif [[ "$BRANCH" == "$DEFAULT_BRANCH" ]]; then
             echo "DEST_DIR=" >> "$GITHUB_ENV"
           else
             echo "DEST_DIR=branch/$BRANCH" >> "$GITHUB_ENV"
           fi
 
       - name: Deploy docs
-        if: github.event_name != 'pull_request'
+        id: deploy
+        if: needs.build.result == 'success'
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/_build/html
+          github_token: ${{ github.token }}
+          publish_dir: ${{ runner.temp }}/docs-artifact
           destination_dir: ${{ env.DEST_DIR }}
           keep_files: true
+
+      - name: Find the preview comment
+        id: comment
+        if: always() && github.event_name == 'pull_request'
+        uses: peter-evans/find-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: github-actions[bot]
+          body-includes: '<!-- dti-reviewer:docs-preview -->'
+
+      - name: Update the preview comment
+        if: always() && github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.comment.outputs.comment-id }}
+          edit-mode: replace
+          body: |
+            <!-- dti-reviewer:docs-preview -->
+
+            Hi human,
+
+            ${{ steps.deploy.outcome == 'success' && format('Your docs are ready! [Take a look here](https://{0}.github.io/{1}/pull/{2}/).', github.repository_owner, github.event.repository.name, github.event.pull_request.number) || format('I could not publish your docs this time. [Check the build logs](https://github.com/{0}/actions/runs/{1}) for details.', github.repository, github.run_id) }}

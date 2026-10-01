@@ -32,7 +32,7 @@ const FormPage = () => {
 
         try {
             // 1) Vectorize the abstract
-            const vectorResp = await fetch("/vectorize", {
+            const vectorResp = await fetch(`${import.meta.env.BASE_URL}vectorize`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ query }),
@@ -42,7 +42,7 @@ const FormPage = () => {
             const { vector_id } = await vectorResp.json()
 
             // 2) Enqueue the search using the stored vector
-            const resp = await fetch("/search", {
+            const resp = await fetch(`${import.meta.env.BASE_URL}search`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ vector_id }),
@@ -54,7 +54,7 @@ const FormPage = () => {
 
             // 3) Poll for status
             while (true) {
-                const statusResp = await fetch(`/status/${task_id}`)
+                const statusResp = await fetch(`${import.meta.env.BASE_URL}status/${task_id}`)
                 if (statusResp.status === 401) return navigate("/login", { replace: true })
                 if (!statusResp.ok) {
                     console.error("Status check error", await statusResp.text())

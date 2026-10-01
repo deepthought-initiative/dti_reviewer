@@ -7,7 +7,7 @@ import { ArrowLeft, FloppyDisk, Trash, UserPlus } from "@phosphor-icons/react"
 import type { Session } from "./LoginPage"
 
 type User = { id: number; username: string | null; issuer: string | null; subject: string | null; is_admin: number; is_blocked: number; is_local: number }
-const endpoint = "/auth/admin/users"
+const endpoint = `${import.meta.env.BASE_URL}auth/admin/users`
 
 export default function AdminPage() {
     const session = useOutletContext<Session>()

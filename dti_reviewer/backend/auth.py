@@ -139,7 +139,7 @@ def login():
             return oauth.identity.authorize_redirect(
                 current_app.config["OIDC_REDIRECT_URI"]
             )
-        return redirect("/login")
+        return redirect(current_app.config["APPLICATION_ROOT"] + "login")
     if current_app.config["AUTH_MODE"] != "local":
         return jsonify(message="Use external login"), 400
     row = get_db().execute(
@@ -196,7 +196,7 @@ def callback():
         return jsonify(message="Account is blocked"), 403
     session.clear()
     login_user(User(row))
-    return redirect("/")
+    return redirect(current_app.config["APPLICATION_ROOT"])
 
 
 @auth_bp.post("/logout")

@@ -1,0 +1,165 @@
+auth
+====
+
+.. py:module:: auth
+
+
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:data:: auth_bp
+
+.. py:data:: login_manager
+
+.. py:data:: oauth
+
+.. py:class:: User(row)
+
+   Bases: :py:obj:`flask_login.UserMixin`
+
+
+   .. py:attribute:: id
+
+
+   .. py:attribute:: is_admin
+
+
+   .. py:attribute:: session_id
+
+
+   .. py:method:: get_id()
+
+
+.. py:function:: load_user(user_id)
+
+   Find the logged-in user by their revocable session identifier.
+
+   :param user_id: Flask-Login supplies this identifier from the session.
+   :type user_id: str
+
+   :returns: The result is the matching user, or None if the user no longer exists.
+   :rtype: User or None
+
+   .. rubric:: Notes
+
+   Flask must know which app is using the database. It sets this up during
+   requests. In a standalone script, call this inside ``with app.app_context():``.
+
+
+.. py:function:: unauthorized()
+
+   Return an error telling the client to log in.
+
+   :returns: The response contains ``message="Login required"`` and status 401.
+   :rtype: tuple of (flask.Response, int)
+
+
+.. py:function:: protect_auth()
+
+   Check the CSRF token before handling an unsafe request under /auth.
+
+   :raises flask_wtf.csrf.CSRFError: The check raises this error if the CSRF token is missing or invalid.
+
+   .. rubric:: Notes
+
+   The CSRF token helps prevent another website from submitting a request
+   using the user's login session.
+
+
+.. py:function:: user_session()
+
+   Return the login status and CSRF token for GET /auth/session.
+
+   :returns: The JSON response contains ``user_id``, ``auth_mode``, and ``csrf_token``
+             with status 200. The user ID is null when nobody is logged in. The browser
+             is told not to cache this response.
+   :rtype: flask.Response
+
+
+.. py:function:: login()
+
+   Handle login requests at /auth/login.
+
+   :returns: GET sends the browser to the external provider or the local login page.
+             POST logs in a local user and returns status 200 on success. It returns
+             status 401 for an incorrect username or password, or status 400 when
+             external login is enabled.
+   :rtype: flask.Response or tuple of (flask.Response, int)
+
+   .. rubric:: Notes
+
+   POST requests supply ``username`` and ``password`` as form fields and
+   need a valid CSRF token. Successful login replaces the previous session.
+
+
+.. py:function:: callback()
+
+   Finish an external login when the provider calls /auth/callback.
+
+   :returns: Successful login sends the browser to the home page. The response has
+             status 404 if external login is disabled, or status 400 if exchanging
+             the login token fails.
+   :rtype: flask.Response or tuple of (flask.Response, int)
+
+   .. rubric:: Notes
+
+   The provider name and its user ID identify the local user record. This
+   function creates that record if needed and replaces the previous session.
+
+
+.. py:function:: logout()
+
+   Log out the user and clear their session at POST /auth/logout.
+
+   :returns: The response contains ``message="Logged out"`` and status 200.
+   :rtype: flask.Response
+
+   .. rubric:: Notes
+
+   The request needs a valid CSRF token.
+
+
+.. py:function:: create_user(username, password, admin)
+
+   Add a local user with the Flask create-user command.
+
+   :param username: The username is saved after surrounding spaces are removed.
+   :type username: str
+   :param password: The password is hashed before it is saved. The command asks the user
+                    to enter it twice.
+   :type password: str
+
+   :raises click.ClickException: The command raises this error if either value is empty or the username
+       already exists.
+
+   .. rubric:: Notes
+
+   The command saves the new user and prints a confirmation. Run it through
+   the Flask CLI so Flask can select the app's database.
+
+
+.. py:function:: promote_user(user_id)
+
+.. py:function:: init_auth(app)
+
+   Set up login, logout, and the user creation command for the app.
+
+   :param app: The app supplies ``AUTH_MODE`` and the settings for external login.
+   :type app: flask.Flask
+
+   :raises ValueError: Setup raises this error if the mode is not ``local`` or ``oidc``, or
+       a required external login setting is missing.
+
+   .. rubric:: Notes
+
+   The ``oidc`` mode connects to an external login provider. The ``local``
+   mode prepares a dummy password hash so unknown usernames still go through
+   a password check.
+
+

@@ -23,41 +23,38 @@ services:
       - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}
       - OIDC_METADATA_URL=${OIDC_METADATA_URL:-}
       - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:-}
+      - ADS_UNIFIED_DIR=/app/expert-data/NASA_ADS_UNIFIED
+      - EMBEDDINGS_DIR=/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED
+      - VECTORIZER_PATH=/app/expert-data/tfidf_vectorizer.joblib
     volumes:
       - reviewer-db:/app/instance
-      - expert-data:/app/expert-data:ro
+      - ${ADS_UNIFIED_DIR}:/app/expert-data/NASA_ADS_UNIFIED:ro
+      - ${EMBEDDINGS_DIR}:/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED:ro
+      - ${VECTORIZER_PATH}:/app/expert-data/tfidf_vectorizer.joblib:ro
     # ports:
     #   - "5000:5000"
     depends_on:
       redis:
         condition: service_healthy
-      index:
-        condition: service_completed_successfully
     restart: unless-stopped
-
-  index:
-    image: dti_reviewer-backend:latest
-    entrypoint: []
-    command: >-
-      conda run --no-capture-output -n dti_reviewer python -c
-      "from similarity_engine import SimilarityEngineOrcid; SimilarityEngineOrcid().load_index_or_build()"
-    volumes:
-      - expert-data:/app/expert-data
 
   worker:
     image: dti_reviewer-backend:latest
     entrypoint: []
     command: conda run --no-capture-output -n dti_reviewer celery -A celery_app worker --loglevel=info --concurrency=1
     volumes:
-      - expert-data:/app/expert-data:ro
+      - ${ADS_UNIFIED_DIR}:/app/expert-data/NASA_ADS_UNIFIED:ro
+      - ${EMBEDDINGS_DIR}:/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED:ro
+      - ${VECTORIZER_PATH}:/app/expert-data/tfidf_vectorizer.joblib:ro
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ADS_UNIFIED_DIR=/app/expert-data/NASA_ADS_UNIFIED
+      - EMBEDDINGS_DIR=/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED
+      - VECTORIZER_PATH=/app/expert-data/tfidf_vectorizer.joblib
     depends_on:
       redis:
         condition: service_healthy
-      index:
-        condition: service_completed_successfully
     restart: unless-stopped
 
   frontend:
@@ -73,4 +70,3 @@ services:
 
 volumes:
   reviewer-db:
-  expert-data:

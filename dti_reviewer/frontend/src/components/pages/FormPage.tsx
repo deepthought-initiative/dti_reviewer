@@ -1,172 +1,125 @@
-import { useState, useRef, type ChangeEvent } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { ResultTable } from "../ResultTable"
 import { FileDashed, MagnifyingGlass } from "@phosphor-icons/react"
-import logo from "../../assets/logo.png"
 
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { ResultTable, type SearchResults } from "../ResultTable"
+import { ReviewerProgress, type SearchProgress } from "../ReviewerProgress"
+import "../../reviewer.css"
 
 const FormPage = () => {
     const navigate = useNavigate()
-    const [query, setQuery] = useState<string>("")
-    const [tableData, setTableData] = useState<[]>([])
-    const [loading, setLoading] = useState<boolean>(false)
-    const [hasSearched, setHasSearched] = useState<boolean>(false)
-    const [percent, setPercent] = useState<number | null>(null)
-    const taskIdRef = useRef<string | null>(null)
+    const [objective, setObjective] = useState("")
+    const [title, setTitle] = useState("")
+    const [abstract, setAbstract] = useState("")
+    const [results, setResults] = useState<SearchResults | null>(null)
+    const [loading, setLoading] = useState(false)
+    const [hasSearched, setHasSearched] = useState(false)
+    const [progress, setProgress] = useState<SearchProgress | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
-    const handleQuery = (e: ChangeEvent<HTMLTextAreaElement>): void => {
-        setQuery(e.target.value)
-    }
-
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (loading || !query.trim()) return
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault()
+        if (loading || !objective.trim() || !title.trim() || !abstract.trim()) return
 
         setLoading(true)
         setHasSearched(true)
-        setTableData([])
-        setPercent(null)
+        setResults(null)
+        setProgress(null)
+        setError(null)
 
         try {
-            // 1) Vectorize the abstract
             const vectorResp = await fetch("/vectorize", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query }),
+                body: JSON.stringify({ abstract }),
             })
             if (vectorResp.status === 401) return navigate("/login", { replace: true })
             if (!vectorResp.ok) throw new Error(`Vectorization failed: HTTP ${vectorResp.status}`)
             const { vector_id } = await vectorResp.json()
 
-            // 2) Enqueue the search using the stored vector
             const resp = await fetch("/search", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ vector_id }),
+                body: JSON.stringify({ vector_id, objective, title }),
             })
             if (resp.status === 401) return navigate("/login", { replace: true })
             if (!resp.ok) throw new Error(`Enqueue failed: HTTP ${resp.status}`)
             const { task_id } = await resp.json()
-            taskIdRef.current = task_id
 
-            // 3) Poll for status
             while (true) {
                 const statusResp = await fetch(`/status/${task_id}`)
                 if (statusResp.status === 401) return navigate("/login", { replace: true })
                 if (!statusResp.ok) {
                     console.error("Status check error", await statusResp.text())
-                    break
+                    throw new Error("Search failed. Please try again.")
                 }
                 const payload = await statusResp.json()
-                const state = payload.state as string
 
-                if (state === "PENDING") {
-                    setPercent(null)
-                } else if (state === "PROGRESS") {
-                    setPercent(Math.round((payload.percent ?? 0) * 100))
-                } else if (state === "SUCCESS") {
-                    setTableData(payload.results)
+                if (payload.state === "PENDING") {
+                    setProgress(null)
+                } else if (payload.state === "PROGRESS") {
+                    setProgress(payload)
+                } else if (payload.state === "SUCCESS") {
+                    setResults(payload.results)
                     break
                 } else {
                     console.error("Task failed or unexpected state", payload)
-                    break
+                    throw new Error("Search failed. Please try again.")
                 }
 
-                // wait before next poll
-                // eslint-disable-next-line no-await-in-loop
-                await new Promise((r) => setTimeout(r, 1500))
+                await new Promise((resolve) => setTimeout(resolve, 1500))
             }
-        } catch (err) {
-            console.error(err)
+        } catch (error) {
+            console.error(error)
+            setError(error instanceof Error ? error.message : "Search failed. Please try again.")
         } finally {
             setLoading(false)
         }
     }
+
     return (
-        <>
-            <div className="max-w-5xl mx-auto px-6 grid grid-cols-5 gap-6 py-8">
-                {/* Row 1 */}
-                <div className="col-span-5 flex items-center justify-center gap-3 lg:hidden">
-                    <img height="60" width="60" src={logo} />
-                    <h1 className="font-bold text-center">DTI Reviewer</h1>
+        <main className="reviewer-page">
+            <header className="reviewer-heading">
+                <h1>Find a reviewer</h1>
+                <p>Match your research with authors and their published work.</p>
+            </header>
+            <form onSubmit={handleSubmit} className="reviewer-form">
+                <div className="proposal-fields">
+                    <label><span>Objective</span>
+                        <Input autoFocus value={objective} onChange={(event) => setObjective(event.target.value)}
+                            placeholder="Research area or programme" required />
+                    </label>
+                    <label><span>Title</span>
+                        <Input value={title} onChange={(event) => setTitle(event.target.value)}
+                            placeholder="Proposal title" required />
+                    </label>
                 </div>
-
-                {/* Row 2 */}
-                <form
-                    onSubmit={handleSubmit}
-                    className="grid grid-cols-1 md:grid-cols-5 border border-border rounded-lg md:gap-4 col-span-5"
-                >
-                    <div className="md:col-span-5 p-6">
-                        <h2>Find a physics expert</h2>
-                        <p className="text-gray-600">
-                            Paste a research abstract or topic below to discover similar physics researchers.
-                        </p>
-                        <Textarea
-                            autoFocus
-                            placeholder="Paste your research abstract or topic here…"
-                            value={query}
-                            onChange={handleQuery}
-                            className="mt-5 mb-4 w-full min-h-32 resize-y max-h-[300px]"
-                            required
-                        />
-                        <Button
-                            type="submit"
-                            disabled={loading}
-                            className="flex w-full sm:ml-auto sm:w-fit sm:px-6"
-                        >
-                            <MagnifyingGlass size={16} aria-hidden="true" />
-                            <strong>{loading ? <span>Searching…</span> : <span>Search</span>}</strong>
-                        </Button>
-                    </div>
-                </form>
-
-                {/* Row 3 */}
-                <div className="col-span-5 min-h-0 flex flex-col border border-border rounded-lg">
-                    <div className="shrink-0 px-6 pt-5 pb-2">
-                        <h2 className="text-lg!">Results</h2>
-                    </div>
-                    <div className="min-h-0 overflow-y-auto max-h-[60vh]">
-                        {loading ? (
-                            <div className="flex flex-col items-center justify-center py-12">
-                                {percent === null ? (
-                                    <>
-                                        <div
-                                            className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"
-                                        />
-                                        <p className="text-lg">Searching for experts...</p>
-                                    </>
-                                ) : (
-                                    <div className="w-full px-6">
-                                        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                                            <div
-                                                className="h-4 bg-primary"
-                                                style={{ width: `${percent}%` }}
-                                            />
-                                        </div>
-                                        <p className="text-center mt-2 text-sm">{percent}%</p>
-                                    </div>
-                                )}
-                            </div>
-                        ) : !hasSearched ? (
-                            <div className="px-6 pb-6 text-muted-foreground">
-                                <p>Paste an abstract above to see researchers ranked by similarity.</p>
-                            </div>
-                        ) : tableData.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-12">
-                                <FileDashed size={48} className="mb-4 text-neutral-400" />
-                                <p className="text-center text-lg">No results</p>
-                            </div>
-                        ) : (
-                            <div className="px-6 pb-6">
-                                <ResultTable dataToDisplay={tableData} />
-                            </div>
-                        )}
-                    </div>
+                <label className="abstract-field"><span>Abstract</span>
+                    <Textarea value={abstract} onChange={(event) => setAbstract(event.target.value)}
+                        placeholder="Paste the abstract you want to find reviewers for…" required />
+                </label>
+                <div className="form-actions">
+                    <span>Paper coverage: 2004–2024</span>
+                    <Button type="submit" disabled={loading} size="lg">
+                        <MagnifyingGlass size={17} aria-hidden="true" />
+                        {loading ? "Searching…" : "Find reviewers"}
+                    </Button>
                 </div>
-            </div></>
+            </form>
+            <section className="reviewer-output" aria-label="Search results" aria-busy={loading}>
+                {loading ? <ReviewerProgress progress={progress} />
+                    : error ? <div className="search-error" role="alert"><strong>Search could not finish</strong><p>{error}</p></div>
+                    : hasSearched && results?.authors.length === 0 ? (
+                        <div className="reviewer-empty"><FileDashed size={30} aria-hidden="true" />
+                            <h2>No reviewers found</h2><p>Try an abstract with more detail about the research topic.</p></div>
+                    ) : results ? <ResultTable results={results} />
+                    : <div className="reviewer-empty"><MagnifyingGlass size={28} aria-hidden="true" />
+                        <h2>Your reviewer shortlist starts here</h2><p>Search an abstract to explore authors and supporting papers.</p></div>}
+            </section>
+        </main>
     )
 }
 

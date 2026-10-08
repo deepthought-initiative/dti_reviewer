@@ -1,69 +1,90 @@
+from time import monotonic
+
 from celery_app import celery
-from similarity_engine import SimilarityEngineOrcid
+from similarity_engine import REVIEWER_PAPER_COUNT, SimilarityEnginePapers
 from vector_store import load_vector
+
 
 engine = None
 
+
 def initialize_similarity_engine():
-    """Create and load the search engine once for this Python process.
-
-    Returns
-    -------
-    SimilarityEngineOrcid
-        The result is the shared search engine for this process.
-
-    Notes
-    -----
-    The first call loads the index. Later calls reuse the engine. Errors
-    while loading the index are not caught here.
-    """
     global engine
     if engine is None:
-        engine = SimilarityEngineOrcid()
-        engine.load_index_or_build()
+        engine = SimilarityEnginePapers()
     return engine
 
 
 @celery.task(bind=True)
-def query_experts_task(self, vector_id: str, top_n: int = 25):
-    """Run an expert search in the background using a stored vector.
-
-    Parameters
-    ----------
-    self : celery.Task
-        Celery supplies this task object so the function can report progress.
-    vector_id : str
-        This is the stored vector ID returned by ``save_vector``.
-    top_n : int, optional
-        The search uses this result limit. The default is 25.
-
-    Returns
-    -------
-    list of dict
-        Each match contains ``orcid``, ``author``, ``similarity``, and
-        ``name_variations``.
-
-    Raises
-    ------
-    ValueError
-        The task raises this error if the vector is missing or has expired.
-
-    Notes
-    -----
-    The task reports progress as 0.05, 0.10, 0.90, and 1.0. These are fractions,
-    so 1.0 means 100 percent. Celery handles any errors raised by the search.
-    """
-    self.update_state(state="PROGRESS", meta={"percent": 0.05})
+def query_experts_task(self, vector_id, objective, title):
     similarity_engine = initialize_similarity_engine()
-
-    self.update_state(state="PROGRESS", meta={"percent": 0.10})
     query_vector = load_vector(vector_id)
     if query_vector is None:
         raise ValueError("Query vector not found or expired")
 
-    self.update_state(state="PROGRESS", meta={"percent": 0.90})
-    results = similarity_engine.rank_experts(query_vector, top_n)
+    proposal_hits = []
+    papers_scored = 0
 
-    self.update_state(state="PROGRESS", meta={"percent": 1.0})
+    def report_progress(stage, percent, **details):
+        self.update_state(
+            state="PROGRESS",
+            meta={
+                "stage": stage,
+                "percent": percent,
+                "papers_scored": papers_scored,
+                **details,
+            },
+        )
 
-    return results.to_dict(orient="records")
+    report_progress("scoring", 0)
+    for year in range(2004, 2025):
+        year_hits, year_paper_count = similarity_engine.score_papers_for_year(
+            query_vector, year
+        )
+        proposal_hits.extend(year_hits)
+        papers_scored += year_paper_count
+        report_progress("scoring", (year - 2003) / 21, year=year)
+
+    proposal_hits = sorted(
+        proposal_hits,
+        key=lambda hit: hit[2],
+        reverse=True,
+    )
+    top_papers_for_objective = proposal_hits[:REVIEWER_PAPER_COUNT]
+    total_papers = len(top_papers_for_objective)
+    papers_read = 0
+    last_update = monotonic()
+    report_progress("reading", 0, papers_read=0, total_papers=total_papers)
+
+    def report_records_read(count):
+        nonlocal papers_read, last_update
+        papers_read += count
+        now = monotonic()
+        if now - last_update >= 0.5 or papers_read == total_papers:
+            report_progress(
+                "reading",
+                papers_read / total_papers,
+                papers_read=papers_read,
+                total_papers=total_papers,
+            )
+            last_update = now
+
+    rows = similarity_engine.attach_records(
+        top_papers_for_objective,
+        objective,
+        on_records_read=report_records_read,
+    )
+    report_progress(
+        "grouping", 1, papers_read=papers_read, total_papers=total_papers
+    )
+    authors = similarity_engine.rollup(rows)
+
+    return {
+        "counts": {
+            "papers": rows.attrs["papers"],
+            "author_rows": rows.attrs["author_rows"],
+            "with_orcid": len(rows),
+            "people": rows["orcid"].nunique(),
+        },
+        "authors": authors.to_dict(orient="records"),
+    }

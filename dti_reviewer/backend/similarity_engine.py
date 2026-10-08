@@ -1,235 +1,236 @@
+import os
 from pathlib import Path
-import pickle
+
+import joblib
+import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 from scipy import sparse
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from abc import ABC, abstractmethod
 
-class BaseSimilarityEngine(ABC):
-    name = "BaseSimilarityEngine"
-    description = "Base class for similarity engines"
+
+REVIEWER_PAPER_COUNT = 10000
+
+
+def truncate_list(input_list, truncation_level=2):
+    return input_list[:truncation_level]
+
+
+def blockize(author):
+    name = author.split(",")
+    last = name[0].strip()
+    if len(name) > 1 and name[1].strip():
+        initial = name[1].lstrip()[0]
+    else:
+        initial = "blank"
+    return f"{initial}.{last}".lower()
+
+
+class SimilarityEnginePapers:
     def __init__(self):
-        """Create the base engine without loading any data."""
-        pass
-    @abstractmethod
-    def query_experts(self, query_text: str, top_n: int = 25):
-        """Require subclasses to provide their own expert search method.
+        self.ads_unified_dir = Path(os.environ["ADS_UNIFIED_DIR"])
+        self.embeddings_dir = Path(os.environ["EMBEDDINGS_DIR"])
+        self.vectorizer_path = Path(os.environ["VECTORIZER_PATH"])
+        self.vectorizer = joblib.load(self.vectorizer_path)
 
-        Parameters
-        ----------
-        query_text : str
-            The search uses this research text to find matching experts.
-        top_n : int, optional
-            The caller requests this many matches. The default is 25.
+    def read_matched_paper_records(
+        self, year, row_indices, on_records_read=None
+    ):
+        year_path = self.ads_unified_dir / f"year={year}/data.parquet"
+        columns = ["title", "abstract", "author", "orcid_user", "aff"]
+        requested_rows = np.asarray(row_indices)
+        unique_rows = np.unique(requested_rows)
+        records = []
+        offset = 0
+        with pq.ParquetFile(year_path) as parquet:
+            for batch in parquet.iter_batches(
+                batch_size=8192, columns=columns, use_threads=False
+            ):
+                batch_end = offset + batch.num_rows
+                selected_rows = unique_rows[
+                    (unique_rows >= offset) & (unique_rows < batch_end)
+                ]
+                if len(selected_rows):
+                    selected = batch.take(selected_rows - offset).to_pandas()
+                    selected.index = selected_rows
+                    records.append(selected)
+                    if on_records_read is not None:
+                        on_records_read(len(selected_rows))
+                offset = batch_end
+            empty = parquet.schema_arrow.empty_table().to_pandas()
+        records = pd.concat(records) if records else empty
+        return records.loc[requested_rows, columns].reset_index(drop=True)
 
-        Raises
-        ------
-        NotImplementedError
-            This base method always raises an error. Each subclass must replace
-            it with a method that performs the search.
-        """
-        raise NotImplementedError("Subclasses must implement this method")
-    
-class SimilarityEngineOrcid(BaseSimilarityEngine):
-    """
-    A class to handle the similarity engine for expert authors.
-    It builds and queries a TF-IDF index of author texts.
-    """
-
-    def __init__(self):
-        """Set the dataset paths and leave the search index unloaded.
-
-        Notes
-        -----
-        The paths start from the directory where the program is running. Creating
-        the engine does not read any files.
-        """
-        self.dataset_path = Path("expert-data/LSPO_v1.h5")
-        self.index_dir = Path("expert-data/indexed-data")
-
-        self.vectorizer = None
-        self.tfidf_matrix = None
-        self.combined_texts = None
-        self.authors = None
-
-    def combine_texts(self, group):
-        """Join one author's publication titles and abstracts into a single text.
-
-        Parameters
-        ----------
-        group : pandas.DataFrame
-            These publication rows must have ``title`` and ``abstract`` columns.
-            Missing values are treated as empty strings.
-
-        Returns
-        -------
-        pandas.Series
-            The result has one entry named ``text``. It contains the publication
-            texts joined with spaces.
-        """
-        combined = (
-            group["title"].fillna("") + " " + group["abstract"].fillna("")
-        ).str.strip()
-        return pd.Series({"text": " ".join(combined)})
-
-    def build_and_save_index(self):
-        """Build the author search index and save it to disk.
-
-        Notes
-        -----
-        This method reads ``dataset_path`` and groups publications by author ID
-        (``@path``). It builds a TF-IDF index using up to 10,000 terms and ignores
-        common English words. It saves the index and author data in ``index_dir``,
-        replacing any existing files. Call ``load_index_or_build`` to load them.
-        """
-        authors = pd.read_hdf(self.dataset_path)
-        combined_texts = (
-            authors.groupby("@path").apply(self.combine_texts).reset_index()
+    def load_year_embeddings(self, year):
+        year_dir = self.embeddings_dir / str(year)
+        return (
+            sparse.load_npz(year_dir / "tfidf_embeddings_refereed.npz"),
+            np.load(year_dir / "refereed_row_indices.npy"),
         )
 
-        vectorizer = TfidfVectorizer(stop_words="english", max_features=10000)
-        tfidf_matrix = vectorizer.fit_transform(combined_texts["text"])
+    def vectorize(self, text):
+        return self.vectorizer.transform([text])
 
-        self.index_dir.mkdir(parents=True, exist_ok=True)
-        sparse.save_npz(self.index_dir / "tfidf_matrix.npz", tfidf_matrix)
-        print(f"Saved TF-IDF matrix to {self.index_dir / 'tfidf_matrix.npz'}")
-        with open(self.index_dir / "vectorizer.pkl", "wb") as f:
-            pickle.dump(vectorizer, f)
-        print(f"Saved vectorizer to {self.index_dir / 'vectorizer.pkl'}")
-        with open(self.index_dir / "combined_texts.pkl", "wb") as f:
-            pickle.dump(combined_texts, f)
-        print(f"Saved combined texts to {self.index_dir / 'combined_texts.pkl'}")
-        with open(self.index_dir / "authors.pkl", "wb") as f:
-            pickle.dump(authors, f)
-        print(f"Saved authors data to {self.index_dir / 'authors.pkl'}")
-        print("✓ Index built and saved successfully!")
+    def score_papers_for_year(self, query_vector, year):
+        proposal_hits = []
+        embeddings, original_row_indices = self.load_year_embeddings(year)
 
-    def load_index_or_build(self):
-        """Load the saved search index, or build it if any required file is missing.
+        sims = cosine_similarity(query_vector, embeddings).ravel()
 
-        Notes
-        -----
-        Every call reads the index and author data from disk. If a required file
-        is missing, all four files are rebuilt. Existing files are reused even if
-        the dataset has changed. Only load pickle files from a trusted source.
-        """
-        required = [
-            "tfidf_matrix.npz",
-            "vectorizer.pkl",
-            "combined_texts.pkl",
-            "authors.pkl",
-        ]
-        missing = [fn for fn in required if not (self.index_dir / fn).exists()]
-        if missing:
-            self.build_and_save_index()
+        top_idx = np.argsort(sims)[-REVIEWER_PAPER_COUNT:][::-1]
 
-        self.tfidf_matrix = sparse.load_npz(self.index_dir / "tfidf_matrix.npz")
-        with open(self.index_dir / "vectorizer.pkl", "rb") as f:
-            self.vectorizer = pickle.load(f)
-        with open(self.index_dir / "combined_texts.pkl", "rb") as f:
-            self.combined_texts = pickle.load(f)
-        with open(self.index_dir / "authors.pkl", "rb") as f:
-            self.authors = pickle.load(f)
+        for idx in top_idx:
+            similarity = float(sims[idx])
 
-    def query_experts(self, query_text: str, top_n: int = 25):
-        """Find the authors whose publications best match a research abstract.
+            if similarity >= 0.98:
+                continue
 
-        Parameters
-        ----------
-        query_text : str
-            The search compares this text with the authors' publications.
-        top_n : int, optional
-            This limits the number of matches. The default is 25. Use zero or a
-            positive value for a normal result limit.
+            original_row_index = int(original_row_indices[idx])
+            proposal_hits.append((year, original_row_index, similarity))
 
-        Returns
-        -------
-        pandas.DataFrame
-            The table lists the best matches first. Its columns are ``orcid``,
-            ``author``, ``similarity``, and ``name_variations``.
+        return proposal_hits, len(original_row_indices)
 
-        Notes
-        -----
-        This method reloads the index on every call. It passes ``top_n`` to
-        ``rank_experts`` without checking the value.
-        """
-        self.load_index_or_build()
-        query_vector = self.vectorize(query_text)
-        return self.rank_experts(query_vector, top_n)
+    def attach_records(self, hits, objective, on_records_read=None):
+        merged_hits = []
+        hits = pd.DataFrame(hits, columns=["year", "row_index", "similarity"])
+        records = pd.DataFrame()
+        if len(hits):
+            records = pd.concat(
+                self.read_matched_paper_records(
+                    year, group["row_index"].to_numpy(), on_records_read
+                ).set_index(group.index)
+                for year, group in hits.groupby("year")
+            ).loc[hits.index]
 
-    def vectorize(self, query_text: str):
-        """Convert research text into a TF-IDF vector for the search.
+        for (_, df_row), year, similarity in zip(
+            records.iterrows(), hits["year"], hits["similarity"]
+        ):
+            authors = df_row["author"]
+            if authors is None or len(authors) == 0:
+                continue
 
-        Parameters
-        ----------
-        query_text : str
-            This is the research text to convert.
+            aff = (
+                df_row["aff"]
+                if df_row["aff"] is not None
+                else ["-"] * len(authors)
+            )
+            orcid = (
+                df_row.get("orcid_user")
+                if df_row.get("orcid_user") is not None
+                else ["-"] * len(authors)
+            )
 
-        Returns
-        -------
-        scipy.sparse.csr_matrix
-            The matrix has one row and one column for each term in the vocabulary.
+            if len(aff) != len(authors) or len(orcid) != len(authors):
+                continue
 
-        Notes
-        -----
-        Call ``load_index_or_build`` first. Words that are not in the index
-        vocabulary are ignored.
-        """
-        return self.vectorizer.transform([query_text])
-
-    def rank_experts(self, query_vector, top_n: int = 25):
-        """Compare a query vector with the authors and return the closest matches.
-
-        Parameters
-        ----------
-        query_vector : scipy.sparse.spmatrix or numpy.ndarray
-            The matrix must have one row and use the same vocabulary as the index.
-        top_n : int, optional
-            This limits the number of matches. The default is 25. Zero returns no
-            matches. A negative value drops that many authors from the end of the
-            sorted list.
-
-        Returns
-        -------
-        pandas.DataFrame
-            The table lists the best matches first. Each row contains ``orcid``,
-            ``author``, ``similarity``, and ``name_variations``. The author name is
-            the first recorded name; name variations are unique and sorted.
-
-        Notes
-        -----
-        Call ``load_index_or_build`` first. Matches with a similarity score of
-        zero can still appear if they fall within the requested limit.
-        """
-        sims = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
-        top_indices = sims.argsort()[::-1][:top_n]
-        top_authors = self.combined_texts.iloc[top_indices].copy()
-        top_authors["similarity"] = sims[top_indices]
-
-        author_info = (
-            self.authors[["@path", "author"]]  # , 'doi']
-            # .dropna(subset=['doi'])  # Remove missing DOIs
-            .groupby("@path")
-            .agg(
+            merged_hits.append(
                 {
-                    "author": "first"
-                    #'doi': lambda x: list(x.unique())[:3]  # Sample up to 3 unique DOIs
+                    "objective": objective,
+                    "title": df_row["title"],
+                    "abstract": df_row["abstract"],
+                    "author": df_row["author"],
+                    "affiliation": df_row["aff"],
+                    "orcid": orcid,
+                    "year": year,
+                    "similarity": similarity,
                 }
             )
-            .reset_index()
+
+        read_in = pd.DataFrame(
+            merged_hits,
+            columns=[
+                "objective",
+                "title",
+                "abstract",
+                "author",
+                "affiliation",
+                "orcid",
+                "year",
+                "similarity",
+            ],
         )
-        results = top_authors.merge(author_info, on="@path", how="left")
-        results = results[["@path", "author", "similarity"]]
-        name_variations = (
-            self.authors[["@path", "author"]]
-            .dropna()
-            .groupby("@path")["author"]
-            .apply(lambda names: list(sorted(set(names))))
-            .reset_index()
-            .rename(columns={"author": "name_variations"})
+        read_in["author"] = read_in["author"].apply(truncate_list)
+        read_in["affiliation"] = read_in["affiliation"].apply(truncate_list)
+        read_in["orcid"] = read_in["orcid"].apply(truncate_list)
+        read_in["author"] = read_in["author"].apply(list)
+
+        cols = ["author", "orcid", "affiliation"]
+        read_in = read_in.explode(cols, ignore_index=True)
+        read_in["title"] = read_in["title"].str[0]
+        read_in["affiliation"] = read_in["affiliation"].apply(
+            lambda x: x[0] if isinstance(x, list) else x
         )
 
-        results = results.merge(name_variations, on="@path", how="left")
-        results = results.rename(columns={"@path": "orcid"})
-        return results
+        paper_count = len(merged_hits)
+        author_row_count = len(read_in)
+        read_in = (
+            read_in.loc[read_in["orcid"].str.strip().ne("-")]
+            .reset_index(drop=True)
+        )
+        read_in["block"] = read_in["author"].apply(blockize)
+        read_in = read_in[
+            [
+                "objective",
+                "title",
+                "abstract",
+                "author",
+                "affiliation",
+                "orcid",
+                "year",
+                "similarity",
+                "block",
+            ]
+        ]
+        read_in.attrs = {
+            "papers": paper_count,
+            "author_rows": author_row_count,
+        }
+        return read_in
+
+    def rollup(self, rows):
+        people = []
+
+        for orcid, group in rows.groupby("orcid", sort=False):
+            papers = [
+                {
+                    "title": row.title,
+                    "year": row.year,
+                    "similarity": row.similarity,
+                }
+                for row in group.itertuples()
+            ]
+            papers = sorted(
+                papers,
+                key=lambda paper: paper["similarity"],
+                reverse=True,
+            )
+            people.append(
+                {
+                    "author": group["author"].iloc[0],
+                    "orcid": orcid,
+                    "affiliation": group["affiliation"].iloc[0],
+                    "block": group["block"].iloc[0],
+                    "n_papers": len(group),
+                    "best_similarity": group["similarity"].max(),
+                    "total_similarity": group["similarity"].sum(),
+                    "papers": papers,
+                }
+            )
+
+        return (
+            pd.DataFrame(
+                people,
+                columns=[
+                    "author",
+                    "orcid",
+                    "affiliation",
+                    "block",
+                    "n_papers",
+                    "best_similarity",
+                    "total_similarity",
+                    "papers",
+                ],
+            )
+            .sort_values("total_similarity", ascending=False)
+            .reset_index(drop=True)
+        )

@@ -1,0 +1,23 @@
+admin
+=====
+
+.. py:module:: admin
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:data:: admin_bp
+
+.. py:function:: require_admin()
+
+.. py:function:: no_cache(response)
+
+.. py:function:: users()
+
+.. py:function:: update_user(user_id)
+

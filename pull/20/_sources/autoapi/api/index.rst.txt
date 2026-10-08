@@ -1,0 +1,27 @@
+api
+===
+
+.. py:module:: api
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:data:: api_bp
+
+.. py:function:: require_login()
+
+.. py:function:: get_query(client_ip)
+
+.. py:function:: vectorize()
+
+.. py:function:: search()
+
+.. py:function:: task_status(task_id)
+

@@ -1,0 +1,55 @@
+similarity_engine
+=================
+
+.. py:module:: similarity_engine
+
+
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:data:: REVIEWER_PAPER_COUNT
+   :value: 10000
+
+
+.. py:function:: truncate_list(input_list, truncation_level=2)
+
+.. py:function:: blockize(author)
+
+.. py:class:: SimilarityEnginePapers
+
+   .. py:attribute:: ads_unified_dir
+
+
+   .. py:attribute:: embeddings_dir
+
+
+   .. py:attribute:: vectorizer_path
+
+
+   .. py:attribute:: vectorizer
+
+
+   .. py:method:: read_matched_paper_records(year, row_indices, on_records_read=None)
+
+
+   .. py:method:: load_year_embeddings(year)
+
+
+   .. py:method:: vectorize(text)
+
+
+   .. py:method:: score_papers_for_year(query_vector, year)
+
+
+   .. py:method:: attach_records(hits, objective, on_records_read=None)
+
+
+   .. py:method:: rollup(rows)
+
+

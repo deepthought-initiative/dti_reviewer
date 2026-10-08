@@ -1,0 +1,34 @@
+app
+===
+
+.. py:module:: app
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:function:: create_app(test_config=None)
+
+   Create the Flask application and initialize its database and authentication.
+
+   :param test_config: These settings override the defaults read from environment variables.
+                       If omitted, the app reads ``config.py`` from its instance directory.
+   :type test_config: mapping, optional
+
+   :returns: The app is ready to handle login and API requests.
+   :rtype: flask.Flask
+
+   :raises ValueError: The app raises this error if ``SECRET_KEY`` is missing, ``AUTH_MODE``
+       is invalid, or required external login settings are missing.
+
+   .. rubric:: Notes
+
+   This function also creates the database directory and user table.
+
+
+.. py:data:: app
+

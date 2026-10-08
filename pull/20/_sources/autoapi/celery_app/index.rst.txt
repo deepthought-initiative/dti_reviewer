@@ -1,0 +1,13 @@
+celery_app
+==========
+
+.. py:module:: celery_app
+
+
+
+
+Module Contents
+---------------
+
+.. py:data:: celery
+

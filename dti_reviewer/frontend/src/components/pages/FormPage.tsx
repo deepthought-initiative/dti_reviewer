@@ -9,6 +9,16 @@ import { ResultTable, type SearchResults } from "../ResultTable"
 import { ReviewerProgress, type SearchProgress } from "../ReviewerProgress"
 import "../../reviewer.css"
 
+const fillExampleOnTab = (
+    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+    setValue: (value: string) => void,
+) => {
+    if (event.key === "Tab" && !event.shiftKey && !event.altKey && !event.ctrlKey
+        && !event.metaKey && !event.currentTarget.value) {
+        setValue(event.currentTarget.placeholder)
+    }
+}
+
 const FormPage = () => {
     const navigate = useNavigate()
     const [objective, setObjective] = useState("")
@@ -90,16 +100,19 @@ const FormPage = () => {
                 <div className="proposal-fields">
                     <label><span>Objective</span>
                         <Input autoFocus value={objective} onChange={(event) => setObjective(event.target.value)}
-                            placeholder="Research area or programme" required />
+                            onKeyDown={(event) => fillExampleOnTab(event, setObjective)}
+                            placeholder="Supermassive Black Holes and Active Galaxies" required />
                     </label>
                     <label><span>Title</span>
                         <Input value={title} onChange={(event) => setTitle(event.target.value)}
-                            placeholder="Proposal title" required />
+                            onKeyDown={(event) => fillExampleOnTab(event, setTitle)}
+                            placeholder="Black Hole Growth and Galaxy Evolution" required />
                     </label>
                 </div>
                 <label className="abstract-field"><span>Abstract</span>
                     <Textarea value={abstract} onChange={(event) => setAbstract(event.target.value)}
-                        placeholder="Paste the abstract you want to find reviewers for…" required />
+                        onKeyDown={(event) => fillExampleOnTab(event, setAbstract)}
+                        placeholder="We study supermassive black hole growth in active galactic nuclei and its relationship to galaxy evolution. We examine accretion disks, jets, and X-ray emission from quasars. We investigate black hole mass measurements, host galaxy properties, and the effects of active galactic nuclei on star formation." required />
                 </label>
                 <div className="form-actions">
                     <span>Paper coverage: 2004–2024</span>

@@ -1,16 +1,22 @@
+import json
 import logging
+from uuid import uuid4
 
 from celery.result import AsyncResult
-from flask import Blueprint, jsonify, request
-from flask_login import login_required
+from flask import Blueprint, current_app, jsonify, request
+from flask_login import current_user, login_required
 
 from celery_app import celery
 from tasks import initialize_similarity_engine, query_experts_task
 from vector_store import save_vector
+from db import get_db
+from search_history import save_search_state
+from admin import no_cache
 
 
 logger = logging.getLogger(__name__)
 api_bp = Blueprint("api", __name__)
+api_bp.after_request(no_cache)
 
 
 @api_bp.before_request
@@ -67,6 +73,10 @@ def search():
     objective = data.get("objective") if data else None
     title = data.get("title") if data else None
 
+    abstract, error = get_query(client_ip)
+    if error:
+        return error
+
     fields = {
         "vector_id": vector_id,
         "objective": objective,
@@ -76,30 +86,64 @@ def search():
         if not isinstance(value, str) or not value.strip():
             return jsonify(message=f"Missing '{name}' parameter"), 400
 
-    celery_task = query_experts_task.delay(vector_id, objective, title)
-    logger.info(f"Celery task {celery_task.id} submitted for {client_ip}")
-    return jsonify(message="Task submitted", task_id=celery_task.id), 202
+    search_id = str(uuid4())
+    db = get_db()
+    db.execute(
+        "INSERT INTO searches (id, user_id, title, objective, abstract) VALUES (?, ?, ?, ?, ?)",
+        (search_id, current_user.id, title, objective, abstract),
+    )
+    db.commit()
+    try:
+        query_experts_task.apply_async(
+            args=[vector_id, objective, title],
+            kwargs={"database": current_app.config["DATABASE"]},
+            task_id=search_id,
+        )
+    except Exception:
+        logger.exception("Could not queue search %s", search_id)
+        save_search_state(current_app.config["DATABASE"], search_id, "FAILURE",
+                          error="Search could not be queued. Please start a new search.")
+    return jsonify(message="Task submitted", task_id=search_id), 202
+
+
+@api_bp.route("/api/history", methods=["GET"])
+def search_history():
+    before = request.args.get("before", "9999")
+    rows = get_db().execute(
+        "SELECT id, title, objective, created_at, state FROM searches "
+        "WHERE user_id = ? AND (created_at || id) < ? "
+        "ORDER BY (created_at || id) DESC LIMIT 51",
+        (current_user.id, before),
+    ).fetchall()
+    entries = [dict(row) for row in rows[:50]]
+    return jsonify(searches=entries, next_cursor=(
+        entries[-1]["created_at"] + entries[-1]["id"] if len(rows) > 50 else None
+    ))
 
 
 @api_bp.route("/status/<task_id>", methods=["GET"])
 def task_status(task_id):
-    client_ip = request.environ.get("HTTP_X_FORWARDED_FOR", request.remote_addr)
-    logger.info(f"Status check for task {task_id} from {client_ip}")
-
-    async_result = AsyncResult(task_id, app=celery)
-    state = async_result.state
-    resp = {"state": state}
-
-    if state == "PENDING":
-        return jsonify(resp), 202
-
-    if state == "PROGRESS":
-        resp.update(async_result.info)
-        return jsonify(resp), 202
-
+    row = get_db().execute(
+        "SELECT * FROM searches WHERE id = ? AND user_id = ?",
+        (task_id, current_user.id),
+    ).fetchone()
+    if row is None:
+        return jsonify(message="Search not found"), 404
+    state = row["state"]
+    if state in {"PENDING", "PROGRESS"}:
+        async_result = AsyncResult(task_id, app=celery)
+        if async_result.state in {"FAILURE", "REVOKED"}:
+            state = "FAILURE"
+            save_search_state(current_app.config["DATABASE"], task_id, state,
+                              error="Search was interrupted. Please start a new search.")
+    response = {
+        "id": row["id"], "title": row["title"], "objective": row["objective"],
+        "abstract": row["abstract"], "created_at": row["created_at"], "state": state,
+    }
     if state == "SUCCESS":
-        resp["results"] = async_result.result
-        return jsonify(resp), 200
-
-    resp["message"] = str(async_result.info or "Unknown error")
-    return jsonify(resp), 500
+        response["results"] = json.loads(row["results"])
+    elif state == "PROGRESS":
+        response.update(json.loads(row["progress"]))
+    elif state == "FAILURE":
+        response["message"] = row["error"] or "Search was interrupted. Please start a new search."
+    return jsonify(response)

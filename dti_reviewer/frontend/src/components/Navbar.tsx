@@ -22,6 +22,7 @@ export default function Component({ isAdmin }: { isAdmin: boolean }) {
                         </div>
                         <nav className="flex flex-col gap-1 p-4" aria-label="Mobile navigation">
                             <Button asChild variant="ghost" className="justify-start"><NavLink to="/" end className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Home</NavLink></Button>
+                            <Button asChild variant="ghost" className="justify-start"><NavLink to="/chats">Chats</NavLink></Button>
                             <Button asChild variant="ghost" className="justify-start"><NavLink to="/about" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">About Us</NavLink></Button>
                             <Button asChild variant="ghost" className="justify-start"><a href="https://github.com/deepthought-initiative/dti_reviewer" target="_blank" rel="noopener noreferrer"><GithubLogo size={18} aria-hidden="true" />GitHub</a></Button>
                         </nav>
@@ -34,6 +35,7 @@ export default function Component({ isAdmin }: { isAdmin: boolean }) {
             </Link>
             <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
                 <Button asChild variant="ghost"><NavLink to="/" end className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Home</NavLink></Button>
+                <Button asChild variant="ghost"><NavLink to="/chats">Chats</NavLink></Button>
                 <Button asChild variant="ghost"><NavLink to="/about" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">About Us</NavLink></Button>
                 <Button asChild variant="ghost"><a href="https://github.com/deepthought-initiative/dti_reviewer" target="_blank" rel="noopener noreferrer"><GithubLogo size={18} aria-hidden="true" />Code</a></Button>
             </nav>

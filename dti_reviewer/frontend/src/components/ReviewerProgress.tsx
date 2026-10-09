@@ -16,7 +16,7 @@ export function ReviewerProgress({ progress }: { progress: SearchProgress | null
   const readingPercent = progress && !scoring ? progress.percent : 0
   const steps = [
     {
-      label: "Score papers",
+      label: progress && !scoring ? "Scored papers" : "Scoring papers",
       percent: scoringPercent,
       active: scoring,
       detail: progress
@@ -24,7 +24,7 @@ export function ReviewerProgress({ progress }: { progress: SearchProgress | null
         : "Waiting to start",
     },
     {
-      label: "Read matching papers",
+      label: progress?.stage === "grouping" ? "Read matching papers" : "Reading matching papers",
       percent: readingPercent,
       active: reading,
       detail: progress && !scoring
@@ -41,7 +41,7 @@ export function ReviewerProgress({ progress }: { progress: SearchProgress | null
           ? "Preparing author matches…" : progress ? "Finding relevant papers…" : "Your search is queued…"}</span>
       </div>
       <div className="progress-steps">
-        {steps.map((step, index) => (
+        {steps.slice(0, progress && !scoring ? 2 : 1).map((step, index) => (
           <div key={step.label} className="progress-step" data-active={step.active}>
             <div className="progress-label">
               <span className="step-number" data-complete={step.percent === 1}>
@@ -50,11 +50,11 @@ export function ReviewerProgress({ progress }: { progress: SearchProgress | null
               <span>{step.label}</span>
               <span className="progress-percent">{Math.round(step.percent * 100)}%</span>
             </div>
-            <div role="progressbar" aria-label={step.label} aria-valuemin={0} aria-valuemax={100}
+            {step.percent !== 1 && <div role="progressbar" aria-label={step.label} aria-valuemin={0} aria-valuemax={100}
               aria-valuenow={Math.round(step.percent * 100)} className="progress-track">
               <div className="progress-fill" style={{ width: `${step.percent * 100}%` }} />
-            </div>
-            <p>{step.detail}</p>
+            </div>}
+            {step.percent !== 1 && <p>{step.detail}</p>}
           </div>
         ))}
       </div>

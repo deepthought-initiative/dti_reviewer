@@ -3,6 +3,7 @@ from time import monotonic
 from celery_app import celery
 from similarity_engine import REVIEWER_PAPER_COUNT, SimilarityEnginePapers
 from vector_store import load_vector
+from search_history import save_search_state
 
 
 engine = None
@@ -16,7 +17,20 @@ def initialize_similarity_engine():
 
 
 @celery.task(bind=True)
-def query_experts_task(self, vector_id, objective, title):
+def query_experts_task(self, vector_id, objective, title, database=None):
+    try:
+        results = find_reviewers(self, vector_id, objective, title, database)
+        save_search_state(database, self.request.id, "SUCCESS", results=results)
+        return results
+    except Exception:
+        save_search_state(
+            database, self.request.id, "FAILURE",
+            error="Search failed. Please start a new search.",
+        )
+        raise
+
+
+def find_reviewers(self, vector_id, objective, title, database):
     similarity_engine = initialize_similarity_engine()
     query_vector = load_vector(vector_id)
     if query_vector is None:
@@ -26,15 +40,14 @@ def query_experts_task(self, vector_id, objective, title):
     papers_scored = 0
 
     def report_progress(stage, percent, **details):
-        self.update_state(
-            state="PROGRESS",
-            meta={
-                "stage": stage,
-                "percent": percent,
-                "papers_scored": papers_scored,
-                **details,
-            },
-        )
+        progress = {
+            "stage": stage,
+            "percent": percent,
+            "papers_scored": papers_scored,
+            **details,
+        }
+        save_search_state(database, self.request.id, "PROGRESS", progress=progress)
+        self.update_state(state="PROGRESS", meta=progress)
 
     report_progress("scoring", 0)
     for year in range(2004, 2025):

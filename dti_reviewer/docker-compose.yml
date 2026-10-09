@@ -43,6 +43,7 @@ services:
     entrypoint: []
     command: conda run --no-capture-output -n dti_reviewer celery -A celery_app worker --loglevel=info --concurrency=1
     volumes:
+      - reviewer-db:/app/instance
       - ${ADS_UNIFIED_DIR}:/app/expert-data/NASA_ADS_UNIFIED:ro
       - ${EMBEDDINGS_DIR}:/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED:ro
       - ${VECTORIZER_PATH}:/app/expert-data/tfidf_vectorizer.joblib:ro

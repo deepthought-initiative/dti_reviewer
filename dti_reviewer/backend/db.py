@@ -75,4 +75,18 @@ def init_db(app):
                 session_id TEXT NOT NULL UNIQUE,
                 UNIQUE (issuer, subject)
             );
+            CREATE TABLE IF NOT EXISTS searches (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                title TEXT NOT NULL,
+                objective TEXT NOT NULL,
+                abstract TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+                state TEXT NOT NULL DEFAULT 'PENDING',
+                progress TEXT,
+                results TEXT,
+                error TEXT
+            );
+            CREATE INDEX IF NOT EXISTS searches_user_created
+                ON searches(user_id, (created_at || id) DESC);
         """)

@@ -1,0 +1,13 @@
+search_history
+==============
+
+.. py:module:: search_history
+
+
+
+
+Module Contents
+---------------
+
+.. py:function:: save_search_state(database, search_id, state, *, progress=None, results=None, error=None)
+

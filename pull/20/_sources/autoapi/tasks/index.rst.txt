@@ -17,5 +17,7 @@ Module Contents
 
 .. py:function:: initialize_similarity_engine()
 
-.. py:function:: query_experts_task(self, vector_id, objective, title)
+.. py:function:: query_experts_task(self, vector_id, objective, title, database=None)
+
+.. py:function:: find_reviewers(self, vector_id, objective, title, database)
 

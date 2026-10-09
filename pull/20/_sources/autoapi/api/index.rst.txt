@@ -23,5 +23,7 @@ Module Contents
 
 .. py:function:: search()
 
+.. py:function:: search_history()
+
 .. py:function:: task_status(task_id)
 

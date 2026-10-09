@@ -16,5 +16,4 @@ dependencies:
   - sphinx-autoapi
   - celery
   - redis-py
-  - pytables
-
+  - pyarrow

@@ -46,47 +46,17 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="tasks.initialize_similarity_engine">
 <span class="sig-prename descclassname"><span class="pre">tasks.</span></span><span class="sig-name descname"><span class="pre">initialize_similarity_engine</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tasks.initialize_similarity_engine" title="Link to this definition">¶</a></dt>
-<dd><p>Create and load the search engine once for this Python process.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The result is the shared search engine for this process.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="../similarity_engine/index.html#similarity_engine.SimilarityEngineOrcid" title="similarity_engine.SimilarityEngineOrcid">SimilarityEngineOrcid</a></p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The first call loads the index. Later calls reuse the engine. Errors
-while loading the index are not caught here.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="tasks.query_experts_task">
-<span class="sig-prename descclassname"><span class="pre">tasks.</span></span><span class="sig-name descname"><span class="pre">query_experts_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tasks.query_experts_task" title="Link to this definition">¶</a></dt>
-<dd><p>Run an expert search in the background using a stored vector.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> (<em>celery.Task</em>) – Celery supplies this task object so the function can report progress.</p></li>
-<li><p><strong>vector_id</strong> (<em>str</em>) – This is the stored vector ID returned by <code class="docutils literal notranslate"><span class="pre">save_vector</span></code>.</p></li>
-<li><p><strong>top_n</strong> (<em>int</em><em>, </em><em>optional</em>) – The search uses this result limit. The default is 25.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Each match contains <code class="docutils literal notranslate"><span class="pre">orcid</span></code>, <code class="docutils literal notranslate"><span class="pre">author</span></code>, <code class="docutils literal notranslate"><span class="pre">similarity</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">name_variations</span></code>.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list of dict</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – The task raises this error if the vector is missing or has expired.</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>The task reports progress as 0.05, 0.10, 0.90, and 1.0. These are fractions,
-so 1.0 means 100 percent. Celery handles any errors raised by the search.</p>
-</dd></dl>
+<span class="sig-prename descclassname"><span class="pre">tasks.</span></span><span class="sig-name descname"><span class="pre">query_experts_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objective</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tasks.query_experts_task" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tasks.find_reviewers">
+<span class="sig-prename descclassname"><span class="pre">tasks.</span></span><span class="sig-name descname"><span class="pre">find_reviewers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objective</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tasks.find_reviewers" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </section>
 </section>
@@ -127,6 +97,7 @@ so 1.0 means 100 percent. Celery handles any errors raised by the search.</p>
 <li class="toctree-l2"><a class="reference internal" href="../admin/index.html">admin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../celery_app/index.html">celery_app</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../vector_store/index.html">vector_store</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../search_history/index.html">search_history</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../similarity_engine/index.html">similarity_engine</a></li>
 </ul>
 </li>

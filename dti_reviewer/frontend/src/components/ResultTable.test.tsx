@@ -19,8 +19,8 @@ describe("ResultTable component", () => {
                 affiliation: "Institute",
                 block: "a.author",
                 n_papers: 1,
-                best_similarity: 0.95,
-                total_similarity: 0.95,
+                top_similarity: 0.95,
+                average_similarity: 0.95,
                 papers: [{ title: "Paper", year: 2024, similarity: 0.95 }],
             }],
         }

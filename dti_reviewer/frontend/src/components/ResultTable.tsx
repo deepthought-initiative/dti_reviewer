@@ -14,7 +14,7 @@ import { AuthorPapers } from "./AuthorPapers"
 export type { SearchResults } from "./reviewerColumns"
 
 export function ResultTable({ results }: { results: SearchResults }) {
-  const [sorting, setSorting] = useState<SortingState>([{ id: "total_similarity", desc: true }])
+  const [sorting, setSorting] = useState<SortingState>([{ id: "average_similarity", desc: true }])
   const [filter, setFilter] = useState("")
   const table = useReactTable({
     data: results.authors,

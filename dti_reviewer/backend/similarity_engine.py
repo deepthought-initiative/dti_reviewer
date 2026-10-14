@@ -211,8 +211,8 @@ class SimilarityEnginePapers:
                     "affiliation": group["affiliation"].iloc[0],
                     "block": group["block"].iloc[0],
                     "n_papers": len(group),
-                    "best_similarity": group["similarity"].max(),
-                    "total_similarity": group["similarity"].sum(),
+                    "top_similarity": group["similarity"].max(),
+                    "average_similarity": group["similarity"].mean(),
                     "papers": papers,
                 }
             )
@@ -226,11 +226,11 @@ class SimilarityEnginePapers:
                     "affiliation",
                     "block",
                     "n_papers",
-                    "best_similarity",
-                    "total_similarity",
+                    "top_similarity",
+                    "average_similarity",
                     "papers",
                 ],
             )
-            .sort_values("total_similarity", ascending=False)
+            .sort_values("average_similarity", ascending=False)
             .reset_index(drop=True)
         )

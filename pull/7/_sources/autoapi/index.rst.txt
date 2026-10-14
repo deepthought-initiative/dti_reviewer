@@ -1,0 +1,19 @@
+API Reference
+=============
+
+This page contains auto-generated API reference documentation [#f1]_.
+
+.. toctree::
+   :titlesonly:
+
+   /autoapi/db/index
+   /autoapi/app/index
+   /autoapi/api/index
+   /autoapi/auth/index
+   /autoapi/tasks/index
+   /autoapi/admin/index
+   /autoapi/celery_app/index
+   /autoapi/vector_store/index
+   /autoapi/similarity_engine/index
+
+.. [#f1] Created with `sphinx-autoapi <https://github.com/readthedocs/sphinx-autoapi>`_

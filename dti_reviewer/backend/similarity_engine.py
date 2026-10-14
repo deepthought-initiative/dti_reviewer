@@ -4,9 +4,9 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-from scipy import sparse
 from sklearn.metrics.pairwise import cosine_similarity
 
+from embedding_cache import EmbeddingCache
 from paper_metadata import read_paper_metadata
 
 
@@ -33,6 +33,10 @@ class SimilarityEnginePapers:
         self.embeddings_dir = Path(os.environ["EMBEDDINGS_DIR"])
         self.vectorizer_path = Path(os.environ["VECTORIZER_PATH"])
         self.vectorizer = joblib.load(self.vectorizer_path)
+        self.embedding_cache = EmbeddingCache(
+            self.embeddings_dir,
+            int(os.environ.get("VECTOR_CACHE_MB", "0")) * 1024**2,
+        )
 
     def read_matched_paper_records(
         self, year, row_indices, on_records_read=None
@@ -43,11 +47,7 @@ class SimilarityEnginePapers:
         )
 
     def load_year_embeddings(self, year):
-        year_dir = self.embeddings_dir / str(year)
-        return (
-            sparse.load_npz(year_dir / "tfidf_embeddings_refereed.npz"),
-            np.load(year_dir / "refereed_row_indices.npy"),
-        )
+        return self.embedding_cache.load(year)
 
     def vectorize(self, text):
         return self.vectorizer.transform([text])

@@ -1,5 +1,7 @@
 from time import monotonic
 
+from celery.signals import worker_init
+
 from celery_app import celery
 from similarity_engine import REVIEWER_PAPER_COUNT, SimilarityEnginePapers
 from vector_store import load_vector
@@ -14,6 +16,11 @@ def initialize_similarity_engine():
     if engine is None:
         engine = SimilarityEnginePapers()
     return engine
+
+
+@worker_init.connect
+def preload_embeddings(**kwargs):
+    initialize_similarity_engine().embedding_cache.preload(range(2004, 2025))
 
 
 @celery.task(bind=True)

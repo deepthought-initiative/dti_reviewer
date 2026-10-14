@@ -66,6 +66,7 @@ services:
       - ${EMBEDDINGS_DIR}:/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED:ro
       - ${VECTORIZER_PATH}:/app/expert-data/tfidf_vectorizer.joblib:ro
     environment:
+      - VECTOR_CACHE_MB=${VECTOR_CACHE_MB:-5500}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - PAPER_METADATA_PATH=/app/paper-metadata/paper_metadata.sqlite

@@ -1,13 +1,14 @@
-import { Fragment, useState } from "react"
+import { Fragment, useMemo, useState } from "react"
 import { ArrowDown, ArrowUp, ArrowsDownUp, CaretLeft, CaretRight, MagnifyingGlass, X } from "@phosphor-icons/react"
 import {
   flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel,
-  getSortedRowModel, useReactTable, type SortingState,
+  getSortedRowModel, useReactTable, type ColumnDef, type SortingState,
 } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { reviewerColumns, type SearchResults } from "./reviewerColumns"
+import { reviewerColumns, type Author, type SearchResults } from "./reviewerColumns"
+import { ReviewerSort } from "./ReviewerSort"
 
 import { AuthorPapers } from "./AuthorPapers"
 
@@ -16,10 +17,22 @@ export type { SearchResults } from "./reviewerColumns"
 export function ResultTable({ results }: { results: SearchResults }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "average_similarity", desc: true }])
   const [filter, setFilter] = useState("")
+  const [k, setK] = useState(3)
+  const topKSelected = sorting[0]?.id === "top_k_similarity"
+  const authors = useMemo(() => results.authors.map((author) => {
+    const papers = author.papers.slice(0, k)
+    return { ...author, top_k_similarity: papers.length
+      ? papers.reduce((sum, paper) => sum + paper.similarity, 0) / papers.length : 0 }
+  }), [results.authors, k])
+  const columns = useMemo<ColumnDef<Author>[]>(() => [...reviewerColumns, {
+    accessorKey: "top_k_similarity", header: `Top ${k} average`, size: 155, minSize: 140,
+    enableGlobalFilter: false,
+    cell: ({ getValue }) => <span className="total-score">{getValue<number>().toFixed(3)}</span>,
+  }], [k])
   const table = useReactTable({
-    data: results.authors,
-    columns: reviewerColumns,
-    state: { sorting, globalFilter: filter },
+    data: authors,
+    columns,
+    state: { sorting, globalFilter: filter, columnVisibility: { top_k_similarity: topKSelected } },
     onSortingChange: setSorting,
     onGlobalFilterChange: setFilter,
     globalFilterFn: "includesString",
@@ -55,7 +68,10 @@ export function ResultTable({ results }: { results: SearchResults }) {
             value={filter} onChange={(event) => setFilter(event.target.value)} />
           {filter && <Button variant="ghost" size="icon" aria-label="Clear filter" onClick={() => setFilter("")}><X /></Button>}
         </div>
-        <span className="results-hint">Drag column edges to resize</span>
+        <ReviewerSort sortId={sorting[0]?.id ?? ""} k={k}
+          label={String(table.getColumn(sorting[0]?.id)?.columnDef.header ?? "Sort reviewers")}
+          onSort={(id) => { setSorting([{ id, desc: true }]); table.setPageIndex(0) }}
+          onKChange={(value) => { setK(value); table.setPageIndex(0) }} />
       </div>
       <div className="reviewer-table-scroll" role="region" aria-label="Reviewer results" tabIndex={0}>
         <Table className="reviewer-table" style={{ width: table.getTotalSize(), minWidth: "100%", tableLayout: "fixed" }}>
@@ -94,12 +110,12 @@ export function ResultTable({ results }: { results: SearchResults }) {
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>)}
                 </TableRow>
-                {row.getIsExpanded() && <TableRow className="expanded-paper-row"><TableCell colSpan={reviewerColumns.length}>
+                {row.getIsExpanded() && <TableRow className="expanded-paper-row"><TableCell colSpan={table.getVisibleLeafColumns().length}>
                   <AuthorPapers author={row.original} id={`papers-${row.id}`} />
                 </TableCell></TableRow>}
               </Fragment>
             ))}
-            {count === 0 && <TableRow><TableCell colSpan={reviewerColumns.length}>
+            {count === 0 && <TableRow><TableCell colSpan={table.getVisibleLeafColumns().length}>
               <div className="empty-filter">No reviewers match this filter.<Button variant="link" onClick={() => setFilter("")}>Clear filter</Button></div>
             </TableCell></TableRow>}
           </TableBody>

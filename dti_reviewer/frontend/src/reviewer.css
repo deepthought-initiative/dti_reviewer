@@ -57,7 +57,21 @@
 .reviewer-filter > svg { position: absolute; left: 12px; color: #586b7c; pointer-events: none; }
 .reviewer-filter input { height: 40px; padding: 0 38px; font-size: 13px; border-color: #c9d5e0; box-shadow: none; }
 .reviewer-filter button { position: absolute; right: 3px; }
-.results-hint { font-size: 11px; color: #586b7c; }
+.reviewer-sort { position: relative; flex-shrink: 0; }
+.sort-trigger { height: 40px; border-color: #c9d5e0; color: var(--reviewer-ink); font-size: 13px; }
+.sort-trigger > svg:first-child { color: var(--reviewer-teal); }
+.sort-panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 10; width: 300px; max-width: calc(100vw - 32px); padding: 16px; background: white; border: 1px solid var(--reviewer-line); border-radius: 9px; box-shadow: 0 8px 24px #243b531a; }
+.sort-panel legend { padding: 0 8px 8px; font-size: 12px; font-weight: 600; }
+.sort-option { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+.sort-option:has(input:checked) { background: #e8f2f0; color: #1d625a; }
+.sort-option input { accent-color: var(--reviewer-teal); }
+.sort-option small { display: block; margin-top: 3px; color: #586b7c; font-size: 11px; }
+.sort-k { display: grid; grid-template-columns: 1fr 76px; align-items: center; gap: 10px; margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--reviewer-line); }
+.sort-k label { font-size: 12px; font-weight: 500; }
+.sort-k input { text-align: center; }
+.sort-k p, .sort-note { color: #586b7c; font-size: 11px; line-height: 1.5; }
+.sort-k p { grid-column: 1 / -1; margin: 0; }
+.sort-note { margin: 12px 8px 0; }
 .reviewer-table-scroll { max-height: 650px; overflow: auto; border: 1px solid var(--reviewer-line); border-radius: 9px; }
 .reviewer-table { border-collapse: separate; border-spacing: 0; color: var(--reviewer-ink); }
 .reviewer-table th { position: sticky; top: 0; z-index: 2; height: 46px; padding: 0 14px; background: #edf2f7; color: #40566b; text-transform: none; letter-spacing: normal; font-size: 12px; border-bottom: 1px solid #c9d5e0; }
@@ -104,8 +118,9 @@
   .form-actions button { width: 100%; }
   .results-summary { flex-direction: column; gap: 8px; }
   .search-counts { text-align: left; }
-  .results-hint { display: none; }
   .reviewer-filter { width: 100%; }
+  .results-toolbar { flex-wrap: wrap; }
+  .reviewer-sort { margin-left: auto; }
   .table-pagination { flex-wrap: wrap; }
   .reviewer-progress { padding: 20px; }
 }

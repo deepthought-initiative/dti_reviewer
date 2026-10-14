@@ -39,22 +39,42 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  metadata:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: dti_reviewer-backend:latest
+    entrypoint: []
+    command: conda run --no-capture-output -n dti_reviewer python initialize_paper_metadata.py
+    environment:
+      - ADS_UNIFIED_DIR=/app/expert-data/NASA_ADS_UNIFIED
+      - EMBEDDINGS_DIR=/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED
+      - PAPER_METADATA_PATH=/app/paper-metadata/paper_metadata.sqlite
+    volumes:
+      - ${PAPER_METADATA_DIR:-./expert-data}:/app/paper-metadata
+      - ${ADS_UNIFIED_DIR}:/app/expert-data/NASA_ADS_UNIFIED:ro
+      - ${EMBEDDINGS_DIR}:/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED:ro
+
   worker:
     image: dti_reviewer-backend:latest
     entrypoint: []
     command: conda run --no-capture-output -n dti_reviewer celery -A celery_app worker --loglevel=info --concurrency=1
     volumes:
       - reviewer-db:/app/instance
+      - ${PAPER_METADATA_DIR:-./expert-data}:/app/paper-metadata:ro
       - ${ADS_UNIFIED_DIR}:/app/expert-data/NASA_ADS_UNIFIED:ro
       - ${EMBEDDINGS_DIR}:/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED:ro
       - ${VECTORIZER_PATH}:/app/expert-data/tfidf_vectorizer.joblib:ro
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - PAPER_METADATA_PATH=/app/paper-metadata/paper_metadata.sqlite
       - ADS_UNIFIED_DIR=/app/expert-data/NASA_ADS_UNIFIED
       - EMBEDDINGS_DIR=/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED
       - VECTORIZER_PATH=/app/expert-data/tfidf_vectorizer.joblib
     depends_on:
+      metadata:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     restart: unless-stopped

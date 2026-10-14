@@ -4,9 +4,10 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-import pyarrow.parquet as pq
 from scipy import sparse
 from sklearn.metrics.pairwise import cosine_similarity
+
+from paper_metadata import read_paper_metadata
 
 
 REVIEWER_PAPER_COUNT = 10000
@@ -36,30 +37,10 @@ class SimilarityEnginePapers:
     def read_matched_paper_records(
         self, year, row_indices, on_records_read=None
     ):
-        year_path = self.ads_unified_dir / f"year={year}/data.parquet"
-        columns = ["title", "abstract", "author", "orcid_user", "aff"]
-        requested_rows = np.asarray(row_indices)
-        unique_rows = np.unique(requested_rows)
-        records = []
-        offset = 0
-        with pq.ParquetFile(year_path) as parquet:
-            for batch in parquet.iter_batches(
-                batch_size=8192, columns=columns, use_threads=False
-            ):
-                batch_end = offset + batch.num_rows
-                selected_rows = unique_rows[
-                    (unique_rows >= offset) & (unique_rows < batch_end)
-                ]
-                if len(selected_rows):
-                    selected = batch.take(selected_rows - offset).to_pandas()
-                    selected.index = selected_rows
-                    records.append(selected)
-                    if on_records_read is not None:
-                        on_records_read(len(selected_rows))
-                offset = batch_end
-            empty = parquet.schema_arrow.empty_table().to_pandas()
-        records = pd.concat(records) if records else empty
-        return records.loc[requested_rows, columns].reset_index(drop=True)
+        return read_paper_metadata(
+            os.environ["PAPER_METADATA_PATH"], self.ads_unified_dir,
+            self.embeddings_dir, year, row_indices, on_records_read,
+        )
 
     def load_year_embeddings(self, year):
         year_dir = self.embeddings_dir / str(year)
@@ -127,7 +108,6 @@ class SimilarityEnginePapers:
                 {
                     "objective": objective,
                     "title": df_row["title"],
-                    "abstract": df_row["abstract"],
                     "author": df_row["author"],
                     "affiliation": df_row["aff"],
                     "orcid": orcid,
@@ -141,7 +121,6 @@ class SimilarityEnginePapers:
             columns=[
                 "objective",
                 "title",
-                "abstract",
                 "author",
                 "affiliation",
                 "orcid",
@@ -172,7 +151,6 @@ class SimilarityEnginePapers:
             [
                 "objective",
                 "title",
-                "abstract",
                 "author",
                 "affiliation",
                 "orcid",

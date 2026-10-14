@@ -1,0 +1,51 @@
+vector_store
+============
+
+.. py:module:: vector_store
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:data:: VECTOR_TTL_SECONDS
+   :value: 3600
+
+
+.. py:data:: redis_client
+
+.. py:function:: save_vector(vector: scipy.sparse.csr_matrix) -> str
+
+   Save a query vector in Redis for later use.
+
+   :param vector: This is the query vector to save.
+   :type vector: scipy.sparse.csr_matrix
+
+   :returns: The new ID can be passed to ``load_vector`` to retrieve the vector.
+   :rtype: str
+
+   .. rubric:: Notes
+
+   The vector is saved as JSON and expires after ``VECTOR_TTL_SECONDS``,
+   currently one hour. Storage errors are not caught here.
+
+
+.. py:function:: load_vector(vector_id: str) -> scipy.sparse.csr_matrix | None
+
+   Load a query vector from Redis.
+
+   :param vector_id: This is the vector ID returned by ``save_vector``.
+   :type vector_id: str
+
+   :returns: The result is the saved vector, or None if it is missing or has expired.
+   :rtype: scipy.sparse.csr_matrix or None
+
+   .. rubric:: Notes
+
+   Loading a vector does not extend its expiry time. Errors from Redis or
+   invalid stored data are not caught here.
+
+

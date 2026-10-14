@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>similarity_engine &#8212; dti_reviewer  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="vector_store" href="../vector_store/index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-similarity_engine">
+<span id="similarity-engine"></span><h1>similarity_engine<a class="headerlink" href="#module-similarity_engine" title="Link to this heading">¶</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="similarity_engine.BaseSimilarityEngine">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">similarity_engine.</span></span><span class="sig-name descname"><span class="pre">BaseSimilarityEngine</span></span><a class="headerlink" href="#similarity_engine.BaseSimilarityEngine" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="similarity_engine.BaseSimilarityEngine.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'BaseSimilarityEngine'</span></span><a class="headerlink" href="#similarity_engine.BaseSimilarityEngine.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="similarity_engine.BaseSimilarityEngine.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Base</span> <span class="pre">class</span> <span class="pre">for</span> <span class="pre">similarity</span> <span class="pre">engines'</span></span><a class="headerlink" href="#similarity_engine.BaseSimilarityEngine.description" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="similarity_engine.BaseSimilarityEngine.query_experts">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">query_experts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#similarity_engine.BaseSimilarityEngine.query_experts" title="Link to this definition">¶</a></dt>
+<dd><p>Require subclasses to provide their own expert search method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query_text</strong> (<em>str</em>) – The search uses this research text to find matching experts.</p></li>
+<li><p><strong>top_n</strong> (<em>int</em><em>, </em><em>optional</em>) – The caller requests this many matches. The default is 25.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – This base method always raises an error. Each subclass must replace
+it with a method that performs the search.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">similarity_engine.</span></span><span class="sig-name descname"><span class="pre">SimilarityEngineOrcid</span></span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#similarity_engine.BaseSimilarityEngine" title="similarity_engine.BaseSimilarityEngine"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseSimilarityEngine</span></code></a></p>
+<p>A class to handle the similarity engine for expert authors.
+It builds and queries a TF-IDF index of author texts.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.dataset_path">
+<span class="sig-name descname"><span class="pre">dataset_path</span></span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.dataset_path" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.index_dir">
+<span class="sig-name descname"><span class="pre">index_dir</span></span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.index_dir" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.vectorizer">
+<span class="sig-name descname"><span class="pre">vectorizer</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.vectorizer" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.tfidf_matrix">
+<span class="sig-name descname"><span class="pre">tfidf_matrix</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.tfidf_matrix" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.combined_texts">
+<span class="sig-name descname"><span class="pre">combined_texts</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.combined_texts" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.authors">
+<span class="sig-name descname"><span class="pre">authors</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.authors" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.combine_texts">
+<span class="sig-name descname"><span class="pre">combine_texts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.combine_texts" title="Link to this definition">¶</a></dt>
+<dd><p>Join one author’s publication titles and abstracts into a single text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>group</strong> (<em>pandas.DataFrame</em>) – These publication rows must have <code class="docutils literal notranslate"><span class="pre">title</span></code> and <code class="docutils literal notranslate"><span class="pre">abstract</span></code> columns.
+Missing values are treated as empty strings.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result has one entry named <code class="docutils literal notranslate"><span class="pre">text</span></code>. It contains the publication
+texts joined with spaces.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.Series</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.build_and_save_index">
+<span class="sig-name descname"><span class="pre">build_and_save_index</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.build_and_save_index" title="Link to this definition">¶</a></dt>
+<dd><p>Build the author search index and save it to disk.</p>
+<p class="rubric">Notes</p>
+<p>This method reads <code class="docutils literal notranslate"><span class="pre">dataset_path</span></code> and groups publications by author ID
+(<code class="docutils literal notranslate"><span class="pre">&#64;path</span></code>). It builds a TF-IDF index using up to 10,000 terms and ignores
+common English words. It saves the index and author data in <code class="docutils literal notranslate"><span class="pre">index_dir</span></code>,
+replacing any existing files. Call <code class="docutils literal notranslate"><span class="pre">load_index_or_build</span></code> to load them.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.load_index_or_build">
+<span class="sig-name descname"><span class="pre">load_index_or_build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.load_index_or_build" title="Link to this definition">¶</a></dt>
+<dd><p>Load the saved search index, or build it if any required file is missing.</p>
+<p class="rubric">Notes</p>
+<p>Every call reads the index and author data from disk. If a required file
+is missing, all four files are rebuilt. Existing files are reused even if
+the dataset has changed. Only load pickle files from a trusted source.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.query_experts">
+<span class="sig-name descname"><span class="pre">query_experts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.query_experts" title="Link to this definition">¶</a></dt>
+<dd><p>Find the authors whose publications best match a research abstract.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query_text</strong> (<em>str</em>) – The search compares this text with the authors’ publications.</p></li>
+<li><p><strong>top_n</strong> (<em>int</em><em>, </em><em>optional</em>) – This limits the number of matches. The default is 25. Use zero or a
+positive value for a normal result limit.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The table lists the best matches first. Its columns are <code class="docutils literal notranslate"><span class="pre">orcid</span></code>,
+<code class="docutils literal notranslate"><span class="pre">author</span></code>, <code class="docutils literal notranslate"><span class="pre">similarity</span></code>, and <code class="docutils literal notranslate"><span class="pre">name_variations</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This method reloads the index on every call. It passes <code class="docutils literal notranslate"><span class="pre">top_n</span></code> to
+<code class="docutils literal notranslate"><span class="pre">rank_experts</span></code> without checking the value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.vectorize">
+<span class="sig-name descname"><span class="pre">vectorize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.vectorize" title="Link to this definition">¶</a></dt>
+<dd><p>Convert research text into a TF-IDF vector for the search.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>query_text</strong> (<em>str</em>) – This is the research text to convert.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The matrix has one row and one column for each term in the vocabulary.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>scipy.sparse.csr_matrix</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Call <code class="docutils literal notranslate"><span class="pre">load_index_or_build</span></code> first. Words that are not in the index
+vocabulary are ignored.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="similarity_engine.SimilarityEngineOrcid.rank_experts">
+<span class="sig-name descname"><span class="pre">rank_experts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query_vector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#similarity_engine.SimilarityEngineOrcid.rank_experts" title="Link to this definition">¶</a></dt>
+<dd><p>Compare a query vector with the authors and return the closest matches.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query_vector</strong> (<em>scipy.sparse.spmatrix</em><em> or </em><em>numpy.ndarray</em>) – The matrix must have one row and use the same vocabulary as the index.</p></li>
+<li><p><strong>top_n</strong> (<em>int</em><em>, </em><em>optional</em>) – This limits the number of matches. The default is 25. Zero returns no
+matches. A negative value drops that many authors from the end of the
+sorted list.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The table lists the best matches first. Each row contains <code class="docutils literal notranslate"><span class="pre">orcid</span></code>,
+<code class="docutils literal notranslate"><span class="pre">author</span></code>, <code class="docutils literal notranslate"><span class="pre">similarity</span></code>, and <code class="docutils literal notranslate"><span class="pre">name_variations</span></code>. The author name is
+the first recorded name; name variations are unique and sorted.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Call <code class="docutils literal notranslate"><span class="pre">load_index_or_build</span></code> first. Matches with a similarity score of
+zero can still appear if they fall within the requested limit.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">dti_reviewer</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../db/index.html">db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app/index.html">app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/index.html">api</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../auth/index.html">auth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../admin/index.html">admin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../celery_app/index.html">celery_app</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../vector_store/index.html">vector_store</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">similarity_engine</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">API Reference</a><ul>
+      <li>Previous: <a href="../vector_store/index.html" title="previous chapter">vector_store</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/autoapi/similarity_engine/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

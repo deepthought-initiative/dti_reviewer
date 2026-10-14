@@ -1,0 +1,25 @@
+tasks
+=====
+
+.. py:module:: tasks
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:data:: engine
+   :value: None
+
+
+.. py:function:: initialize_similarity_engine()
+
+.. py:function:: preload_embeddings(**kwargs)
+
+.. py:function:: query_experts_task(self, vector_id, objective, title, database=None)
+
+.. py:function:: find_reviewers(self, vector_id, objective, title, database)
+

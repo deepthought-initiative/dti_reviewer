@@ -1,0 +1,37 @@
+embedding_cache
+===============
+
+.. py:module:: embedding_cache
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+
+.. py:class:: EmbeddingCache(directory, budget_bytes)
+
+   .. py:attribute:: directory
+
+
+   .. py:attribute:: budget_bytes
+
+
+   .. py:attribute:: cached_bytes
+      :value: 0
+
+
+
+   .. py:attribute:: entries
+
+
+   .. py:method:: load(year)
+
+
+   .. py:method:: preload(years)
+
+

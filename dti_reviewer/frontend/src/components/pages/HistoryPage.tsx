@@ -21,7 +21,7 @@ export default function HistoryPage() {
     setError("")
     async function load() {
       try {
-        const response = await fetch(`/api/history${before ? `?before=${encodeURIComponent(before)}` : ""}`, { signal: controller.signal })
+        const response = await fetch(`${import.meta.env.BASE_URL}api/history${before ? `?before=${encodeURIComponent(before)}` : ""}`, { signal: controller.signal })
         if (response.status === 401) return navigate("/login", { replace: true })
         if (!response.ok) throw new Error("Could not load search history. Please refresh.")
         const data: History = await response.json()

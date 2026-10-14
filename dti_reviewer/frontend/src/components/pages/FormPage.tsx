@@ -38,7 +38,7 @@ const FormPage = () => {
         setError(null)
 
         try {
-            const vectorResp = await fetch("/vectorize", {
+            const vectorResp = await fetch(`${import.meta.env.BASE_URL}vectorize`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ abstract }),
@@ -47,7 +47,7 @@ const FormPage = () => {
             if (!vectorResp.ok) throw new Error(`Vectorization failed: HTTP ${vectorResp.status}`)
             const { vector_id } = await vectorResp.json()
 
-            const resp = await fetch("/search", {
+            const resp = await fetch(`${import.meta.env.BASE_URL}search`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ vector_id, objective, title, abstract }),

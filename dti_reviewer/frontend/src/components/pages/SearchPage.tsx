@@ -28,7 +28,7 @@ export default function SearchPage() {
     setError("")
     async function poll() {
       try {
-        const response = await fetch(`/status/${id}`, { signal: controller.signal })
+        const response = await fetch(`${import.meta.env.BASE_URL}status/${id}`, { signal: controller.signal })
         if (response.status === 401) return navigate("/login", { replace: true })
         if (!response.ok) throw new Error(response.status === 404
           ? "Search not found." : "Could not load this search. Refresh to reconnect.")

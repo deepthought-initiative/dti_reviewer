@@ -63,7 +63,7 @@ class SimilarityEnginePapers:
         for idx in top_idx:
             similarity = float(sims[idx])
 
-            if similarity >= 0.98:
+            if similarity >= 0.92:
                 continue
 
             original_row_index = int(original_row_indices[idx])

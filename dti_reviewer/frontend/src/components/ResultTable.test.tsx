@@ -7,6 +7,7 @@ import { ResultTable } from "../components/ResultTable"
 describe("ResultTable component", () => {
     it("renders cells when data is provided", () => {
         const results = {
+            year_start: 2004, year_end: 2024,
             counts: {
                 papers: 1,
                 author_rows: 2,

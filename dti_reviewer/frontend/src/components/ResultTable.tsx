@@ -57,7 +57,7 @@ export function ResultTable({ results }: { results: SearchResults }) {
     <div className="reviewer-results">
       <div className="results-summary">
         <div><h2>Suggested reviewers <span>{results.counts.people.toLocaleString()}</span></h2>
-          <p>From {results.counts.papers.toLocaleString()} matched papers <Tooltip>
+          <p>From {results.counts.papers.toLocaleString()} matched papers ({results.year_start} to {results.year_end}) <Tooltip>
             <TooltipTrigger asChild><button type="button" aria-label="About similarity"><Info aria-hidden="true" /></button></TooltipTrigger>
             <TooltipContent className="max-w-xs">Similarity measures shared vocabulary between your abstract and a paper using TF-IDF cosine similarity, from 0 to 1. Higher scores mean closer text matches, not a probability of expertise. Top similarity is the highest paper score; average similarity is the mean of all matched papers. Papers scoring 0.92 or higher are excluded as possible copies or close variations.</TooltipContent>
           </Tooltip></p></div>

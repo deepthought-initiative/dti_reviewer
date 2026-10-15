@@ -21,6 +21,8 @@ export interface Author {
 }
 
 export interface SearchResults {
+  year_start: number
+  year_end: number
   counts: { papers: number; author_rows: number; with_orcid: number; people: number }
   authors: Author[]
 }

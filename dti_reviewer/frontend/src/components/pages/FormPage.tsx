@@ -27,6 +27,8 @@ const FormPage = () => {
     const [objective, setObjective] = useState("")
     const [title, setTitle] = useState("")
     const [abstract, setAbstract] = useState("")
+    const [yearStart, setYearStart] = useState("2004")
+    const [yearEnd, setYearEnd] = useState("2024")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -50,7 +52,7 @@ const FormPage = () => {
             const resp = await fetch(`${import.meta.env.BASE_URL}search`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ vector_id, objective, title, abstract }),
+                body: JSON.stringify({ vector_id, objective, title, abstract, year_start: Number(yearStart), year_end: Number(yearEnd) }),
             })
             if (resp.status === 401) return navigate("/login", { replace: true })
             if (!resp.ok) throw new Error(`Enqueue failed: HTTP ${resp.status}`)
@@ -90,6 +92,12 @@ const FormPage = () => {
                         onKeyDown={(event) => fillExampleOnTab(event, setAbstract)}
                         placeholder="We study supermassive black hole growth in active galactic nuclei and its relationship to galaxy evolution. We examine accretion disks, jets, and X-ray emission from quasars. We investigate black hole mass measurements, host galaxy properties, and the effects of active galactic nuclei on star formation." required />
                 </label>
+                <div className="proposal-fields">
+                    <label><span>From year (inclusive)</span><Input type="number" min={2004} max={Number(yearEnd)} step={1}
+                        value={yearStart} onChange={(event) => setYearStart(event.target.value)} required /></label>
+                    <label><span>To year (inclusive)</span><Input type="number" min={Number(yearStart)} max={2024} step={1}
+                        value={yearEnd} onChange={(event) => setYearEnd(event.target.value)} required /></label>
+                </div>
                 <div className="form-actions">
                     <span>Paper coverage: 2004–2024</span>
                     <Button type="submit" disabled={loading} size="lg">

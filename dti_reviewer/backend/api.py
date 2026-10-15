@@ -86,6 +86,14 @@ def search():
         if not isinstance(value, str) or not value.strip():
             return jsonify(message=f"Missing '{name}' parameter"), 400
 
+    year_start = data.get("year_start")
+    year_end = data.get("year_end")
+    if (
+        type(year_start) is not int or type(year_end) is not int
+        or not 2004 <= year_start <= year_end <= 2024
+    ):
+        return jsonify(message="Choose whole years from 2004 to 2024, start before end"), 400
+
     search_id = str(uuid4())
     db = get_db()
     db.execute(
@@ -96,7 +104,8 @@ def search():
     try:
         query_experts_task.apply_async(
             args=[vector_id, objective, title],
-            kwargs={"database": current_app.config["DATABASE"]},
+            kwargs={"database": current_app.config["DATABASE"],
+                    "year_start": year_start, "year_end": year_end},
             task_id=search_id,
         )
     except Exception:

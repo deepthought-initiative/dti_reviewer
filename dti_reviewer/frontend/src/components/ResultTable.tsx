@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from "react"
-import { ArrowDown, ArrowUp, ArrowsDownUp, CaretLeft, CaretRight, MagnifyingGlass, X } from "@phosphor-icons/react"
+import { ArrowDown, ArrowUp, ArrowsDownUp, CaretLeft, CaretRight, MagnifyingGlass, Info, X } from "@phosphor-icons/react"
 import {
   flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel,
   getSortedRowModel, useReactTable, type ColumnDef, type SortingState,
@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { reviewerColumns, type Author, type SearchResults } from "./reviewerColumns"
 import { ReviewerSort } from "./ReviewerSort"
+
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { AuthorPapers } from "./AuthorPapers"
 
@@ -55,7 +57,10 @@ export function ResultTable({ results }: { results: SearchResults }) {
     <div className="reviewer-results">
       <div className="results-summary">
         <div><h2>Suggested reviewers <span>{results.counts.people.toLocaleString()}</span></h2>
-          <p>From {results.counts.papers.toLocaleString()} matched papers</p></div>
+          <p>From {results.counts.papers.toLocaleString()} matched papers <Tooltip>
+            <TooltipTrigger asChild><button type="button" aria-label="About similarity"><Info aria-hidden="true" /></button></TooltipTrigger>
+            <TooltipContent className="max-w-xs">Similarity measures shared vocabulary between your abstract and a paper using TF-IDF cosine similarity, from 0 to 1. Higher scores mean closer text matches, not a probability of expertise. Top similarity is the highest paper score; average similarity is the mean of all matched papers. Papers scoring 0.92 or higher are excluded as possible copies or close variations.</TooltipContent>
+          </Tooltip></p></div>
         <details className="search-counts"><summary>Search breakdown</summary>
           <dl><div><dt>Author entries</dt><dd>{results.counts.author_rows.toLocaleString()}</dd></div>
             <div><dt>Entries with ORCID</dt><dd>{results.counts.with_orcid.toLocaleString()}</dd></div></dl>

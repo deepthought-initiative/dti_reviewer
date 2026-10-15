@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 
-METADATA_COLUMNS = ["title", "author", "orcid_user", "aff"]
+METADATA_COLUMNS = ["title", "bibcode", "author", "orcid_user", "aff"]
 
 
 def source_signature(ads_dir, embeddings_dir, year):
@@ -16,7 +16,7 @@ def source_signature(ads_dir, embeddings_dir, year):
     ]
     # shortcut: trusts size and mtime; hash files if these can mask changes.
     stats = [path.stat() for path in paths]
-    return json.dumps([(stat.st_size, stat.st_mtime_ns) for stat in stats])
+    return json.dumps([METADATA_COLUMNS, [(stat.st_size, stat.st_mtime_ns) for stat in stats]])
 
 
 def read_paper_metadata(

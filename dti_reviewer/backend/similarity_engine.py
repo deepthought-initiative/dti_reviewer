@@ -108,6 +108,7 @@ class SimilarityEnginePapers:
                 {
                     "objective": objective,
                     "title": df_row["title"],
+                    "bibcode": df_row["bibcode"],
                     "author": df_row["author"],
                     "affiliation": df_row["aff"],
                     "orcid": orcid,
@@ -121,6 +122,7 @@ class SimilarityEnginePapers:
             columns=[
                 "objective",
                 "title",
+                "bibcode",
                 "author",
                 "affiliation",
                 "orcid",
@@ -151,6 +153,7 @@ class SimilarityEnginePapers:
             [
                 "objective",
                 "title",
+                "bibcode",
                 "author",
                 "affiliation",
                 "orcid",
@@ -172,6 +175,7 @@ class SimilarityEnginePapers:
             papers = [
                 {
                     "title": row.title,
+                    "bibcode": row.bibcode,
                     "year": row.year,
                     "similarity": row.similarity,
                 }

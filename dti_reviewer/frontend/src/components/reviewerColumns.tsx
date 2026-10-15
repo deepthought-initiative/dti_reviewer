@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 
 interface Paper {
   title: string
+  bibcode: string | null
   year: number
   similarity: number
 }

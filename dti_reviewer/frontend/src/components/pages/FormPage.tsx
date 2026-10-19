@@ -92,6 +92,7 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
                         <p>{panelFields[field as keyof typeof panelFields]}</p>
                     </details>}
                 </div> : <>
+                    <p className="mb-4 text-xs text-muted-foreground">Press Tab in an empty field to fill with example data.</p>
                     <div className="proposal-fields">
                         <label><span>Objective</span>
                             <Input autoFocus value={objective} onChange={(event) => setObjective(event.target.value)}

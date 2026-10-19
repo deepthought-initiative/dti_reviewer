@@ -56,14 +56,14 @@ export default function SearchPage() {
         </div>
         {search && <p>{search.objective}</p>}
       </header>
-      {search && <details className="saved-abstract"><summary>View abstract</summary><p>{search.abstract}</p></details>}
+      {search && <details className="saved-abstract"><summary>View search text</summary><p>{search.abstract}</p></details>}
       {error ? <p role="alert" className="search-error">{error}</p>
         : !search ? <p role="status">Loading search…</p>
         : running ? <ReviewerProgress progress={search.state === "PROGRESS" ? search : null} />
         : search.state === "FAILURE" ? <p role="alert" className="search-error">{search.message}</p>
         : search.results && (search.results.authors.length
           ? <ResultTable results={search.results} />
-          : <p className="reviewer-empty">No reviewers found. Try a more detailed abstract.</p>)}
+          : <p className="reviewer-empty">No matching people found. Try a different search or year range.</p>)}
       <div className="form-actions"><Button asChild variant="outline"><Link to="/">New search</Link></Button></div>
     </main>
   )

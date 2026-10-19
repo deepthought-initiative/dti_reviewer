@@ -48,7 +48,8 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="*" element={<Navbar isAdmin={false} />} />
         <Route element={<RequireLogin />}>
-          <Route path="/" element={<FormPage />} />
+          <Route path="/" element={<FormPage key="reviewer" />} />
+          <Route path="/panel" element={<FormPage key="panel" panel />} />
           <Route path="/chats" element={<HistoryPage />} />
           <Route path="/history" element={<HistoryRedirect />} />
           <Route path="/chat/:id" element={<SearchPage />} />

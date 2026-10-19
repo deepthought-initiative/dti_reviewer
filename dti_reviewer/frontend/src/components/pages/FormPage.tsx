@@ -5,6 +5,7 @@ import { MagnifyingGlass } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import panelFields from "@/panelFields.json"
 import "../../reviewer.css"
 
 const fillExampleOnTab = (
@@ -17,13 +18,14 @@ const fillExampleOnTab = (
     }
 }
 
-const FormPage = () => {
+const FormPage = ({ panel = false }: { panel?: boolean }) => {
     const navigate = useNavigate()
     const mounted = useRef(true)
     useEffect(() => {
         mounted.current = true
         return () => { mounted.current = false }
     }, [])
+    const [field, setField] = useState("")
     const [objective, setObjective] = useState("")
     const [title, setTitle] = useState("")
     const [abstract, setAbstract] = useState("")
@@ -34,7 +36,12 @@ const FormPage = () => {
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault()
-        if (loading || !objective.trim() || !title.trim() || !abstract.trim()) return
+        const query = panel ? {
+            objective: field,
+            title: `Panel builder: ${field}`,
+            abstract: panelFields[field as keyof typeof panelFields],
+        } : { objective, title, abstract }
+        if (loading || !query.objective.trim() || !query.title.trim() || !query.abstract?.trim()) return
 
         setLoading(true)
         setError(null)
@@ -43,7 +50,7 @@ const FormPage = () => {
             const vectorResp = await fetch(`${import.meta.env.BASE_URL}vectorize`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ abstract }),
+                body: JSON.stringify({ abstract: query.abstract }),
             })
             if (vectorResp.status === 401) return navigate("/login", { replace: true })
             if (!vectorResp.ok) throw new Error(`Vectorization failed: HTTP ${vectorResp.status}`)
@@ -52,7 +59,7 @@ const FormPage = () => {
             const resp = await fetch(`${import.meta.env.BASE_URL}search`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ vector_id, objective, title, abstract, year_start: Number(yearStart), year_end: Number(yearEnd) }),
+                body: JSON.stringify({ vector_id, ...query, year_start: Number(yearStart), year_end: Number(yearEnd) }),
             })
             if (resp.status === 401) return navigate("/login", { replace: true })
             if (!resp.ok) throw new Error(`Enqueue failed: HTTP ${resp.status}`)
@@ -71,27 +78,38 @@ const FormPage = () => {
     return (
         <main className="reviewer-page">
             <header className="reviewer-heading">
-                <h1>Find a reviewer</h1>
-                <p>Match your research with authors and their published work.</p>
+                <h1>{panel ? "Panel builder" : "Find a reviewer"}</h1>
+                <p>{panel ? "Choose a research field to find potential panel members using its predefined keywords." : "Match your research with authors and their published work."}</p>
             </header>
             <form onSubmit={handleSubmit} className="reviewer-form">
-                <div className="proposal-fields">
-                    <label><span>Objective</span>
-                        <Input autoFocus value={objective} onChange={(event) => setObjective(event.target.value)}
-                            onKeyDown={(event) => fillExampleOnTab(event, setObjective)}
-                            placeholder="Supermassive Black Holes and Active Galaxies" required />
+                {panel ? <div className="abstract-field">
+                    <label><span>Research field</span>
+                    <select autoFocus value={field} onChange={(event) => setField(event.target.value)} required>
+                        <option value="" disabled>Choose a field</option>
+                        {Object.keys(panelFields).map((name) => <option key={name} value={name}>{name}</option>)}
+                    </select></label>
+                    {field && <details className="saved-abstract"><summary>View search keywords</summary>
+                        <p>{panelFields[field as keyof typeof panelFields]}</p>
+                    </details>}
+                </div> : <>
+                    <div className="proposal-fields">
+                        <label><span>Objective</span>
+                            <Input autoFocus value={objective} onChange={(event) => setObjective(event.target.value)}
+                                onKeyDown={(event) => fillExampleOnTab(event, setObjective)}
+                                placeholder="Supermassive Black Holes and Active Galaxies" required />
+                        </label>
+                        <label><span>Title</span>
+                            <Input value={title} onChange={(event) => setTitle(event.target.value)}
+                                onKeyDown={(event) => fillExampleOnTab(event, setTitle)}
+                                placeholder="Black Hole Growth and Galaxy Evolution" required />
+                        </label>
+                    </div>
+                    <label className="abstract-field"><span>Abstract</span>
+                        <Textarea value={abstract} onChange={(event) => setAbstract(event.target.value)}
+                            onKeyDown={(event) => fillExampleOnTab(event, setAbstract)}
+                            placeholder="We study supermassive black hole growth in active galactic nuclei and its relationship to galaxy evolution. We examine accretion disks, jets, and X-ray emission from quasars. We investigate black hole mass measurements, host galaxy properties, and the effects of active galactic nuclei on star formation." required />
                     </label>
-                    <label><span>Title</span>
-                        <Input value={title} onChange={(event) => setTitle(event.target.value)}
-                            onKeyDown={(event) => fillExampleOnTab(event, setTitle)}
-                            placeholder="Black Hole Growth and Galaxy Evolution" required />
-                    </label>
-                </div>
-                <label className="abstract-field"><span>Abstract</span>
-                    <Textarea value={abstract} onChange={(event) => setAbstract(event.target.value)}
-                        onKeyDown={(event) => fillExampleOnTab(event, setAbstract)}
-                        placeholder="We study supermassive black hole growth in active galactic nuclei and its relationship to galaxy evolution. We examine accretion disks, jets, and X-ray emission from quasars. We investigate black hole mass measurements, host galaxy properties, and the effects of active galactic nuclei on star formation." required />
-                </label>
+                </>}
                 <div className="proposal-fields">
                     <label><span>From year (inclusive)</span><Input type="number" min={2004} max={Number(yearEnd)} step={1}
                         value={yearStart} onChange={(event) => setYearStart(event.target.value)} required /></label>
@@ -102,7 +120,7 @@ const FormPage = () => {
                     <span>Paper coverage: 2004–2024</span>
                     <Button type="submit" disabled={loading} size="lg">
                         <MagnifyingGlass size={17} aria-hidden="true" />
-                        {loading ? "Searching…" : "Find reviewers"}
+                        {loading ? "Searching…" : panel ? "Find panel members" : "Find reviewers"}
                     </Button>
                 </div>
             </form>

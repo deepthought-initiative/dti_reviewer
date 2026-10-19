@@ -17,8 +17,9 @@
 .proposal-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .reviewer-form label { display: block; font-size: 13px; font-weight: 500; }
 .reviewer-form label > span { display: block; margin-bottom: 7px; }
-.reviewer-form input, .reviewer-form textarea { background: white; border-color: #c9d5e0; border-radius: 6px; box-shadow: none; font-size: 14px; }
+.reviewer-form input, .reviewer-form textarea, .reviewer-form select { background: white; border-color: #c9d5e0; border-radius: 6px; box-shadow: none; font-size: 14px; }
 .reviewer-form input { height: 40px; }
+.reviewer-form select { width: 100%; min-height: 40px; border: 1px solid #c9d5e0; padding: 8px 12px; }
 .abstract-field { margin-top: 18px; }
 .reviewer-form textarea { min-height: 116px; max-height: 300px; resize: vertical; line-height: 1.7; }
 .form-actions { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 16px; }

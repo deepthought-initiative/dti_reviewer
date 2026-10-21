@@ -1,0 +1,25 @@
+initialize_paper_metadata
+=========================
+
+.. py:module:: initialize_paper_metadata
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:function:: build_year(connection, ads_dir, embeddings_dir, year)
+
+.. py:function:: build_metadata(ads_dir, embeddings_dir, output)
+
+.. py:function:: metadata_is_current(ads_dir, embeddings_dir, output)
+
+.. py:data:: ads_dir
+
+.. py:data:: embeddings_dir
+
+.. py:data:: output
+

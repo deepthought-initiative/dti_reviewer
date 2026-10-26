@@ -5,7 +5,7 @@ from flask import Blueprint, current_app, jsonify, request
 from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash
 
-from db import get_db
+from storage.db import get_db
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin/users")

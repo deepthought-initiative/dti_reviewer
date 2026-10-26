@@ -7,12 +7,12 @@ from flask import Blueprint, current_app, jsonify, request
 from flask_login import current_user, login_required
 
 from celery_app import celery
-from tasks import initialize_similarity_engine, query_experts_task
-from vector_store import save_vector
-from db import get_db
-from search_history import save_search_state
-from admin import no_cache
-from paper_metadata import FIRST_YEAR, LAST_YEAR, is_valid_year_range
+from search.tasks import initialize_similarity_engine, query_experts_task
+from storage.vector_store import save_vector
+from storage.db import get_db
+from storage.search_history import save_search_state
+from routes.admin import no_cache
+from storage.paper_metadata import FIRST_YEAR, LAST_YEAR, is_valid_year_range
 
 
 logger = logging.getLogger(__name__)

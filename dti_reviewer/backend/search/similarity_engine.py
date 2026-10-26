@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
-from embedding_cache import EmbeddingCache
-from paper_metadata import read_paper_metadata
+from search.embedding_cache import EmbeddingCache
+from storage.paper_metadata import read_paper_metadata
 
 
 REVIEWER_PAPER_COUNT = 10000

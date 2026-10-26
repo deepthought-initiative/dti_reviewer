@@ -45,7 +45,7 @@ services:
       dockerfile: Dockerfile
     image: dti_reviewer-backend:latest
     entrypoint: []
-    command: conda run --no-capture-output -n dti_reviewer python initialize_paper_metadata.py
+    command: conda run --no-capture-output -n dti_reviewer python -m scripts.initialize_paper_metadata
     environment:
       - ADS_UNIFIED_DIR=/app/expert-data/NASA_ADS_UNIFIED
       - EMBEDDINGS_DIR=/app/expert-data/NASA_ADS_UNIFIED_EMBEDDINGS_REFEREED

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import "@testing-library/jest-dom"
 
-import { ResultTable } from "../components/ResultTable"
+import { ResultTable } from "./ResultTable"
 
 
 describe("ResultTable component", () => {

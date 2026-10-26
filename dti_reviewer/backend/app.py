@@ -5,8 +5,8 @@ from flask import Flask
 from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect
 
-from auth import init_auth
-from db import init_db
+from routes.auth import init_auth
+from storage.db import init_db
 
 
 def create_app(test_config=None):
@@ -62,7 +62,7 @@ def create_app(test_config=None):
     init_db(app)
     init_auth(app)
 
-    from api import api_bp
+    from routes.api import api_bp
     app.register_blueprint(api_bp)
     return app
 

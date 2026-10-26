@@ -3,10 +3,10 @@ from time import monotonic
 from celery.signals import worker_init
 
 from celery_app import celery
-from similarity_engine import REVIEWER_PAPER_COUNT, SimilarityEnginePapers
-from vector_store import load_vector
-from search_history import save_search_state
-from paper_metadata import YEARS, is_valid_year_range
+from search.similarity_engine import REVIEWER_PAPER_COUNT, SimilarityEnginePapers
+from storage.vector_store import load_vector
+from storage.search_history import save_search_state
+from storage.paper_metadata import YEARS, is_valid_year_range
 
 
 engine = None

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { ChatsCircle } from "@phosphor-icons/react"
-import { ResultTable, type SearchResults } from "../ResultTable"
-import { ReviewerProgress, type SearchProgress } from "../ReviewerProgress"
-import { Button } from "../ui/button"
-import "../../reviewer.css"
+import { ResultTable, type SearchResults } from "../components/reviewers/ResultTable"
+import { ReviewerProgress, type SearchProgress } from "../components/reviewers/ReviewerProgress"
+import { Button } from "../components/ui/button"
+import "../reviewer.css"
 
 type SavedSearch = SearchProgress & {
   title: string

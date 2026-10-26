@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import Navbar from "../Navbar"
+import Navbar from "../components/Navbar"
 import { ArrowLeft, SignOut, Users } from "@phosphor-icons/react"
 
 export type Session = { user_id: string | null; auth_mode: string; csrf_token: string; is_admin: boolean }

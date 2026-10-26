@@ -5,8 +5,8 @@ import { MagnifyingGlass } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import panelFields from "@/panelFields.json"
-import "../../reviewer.css"
+import panelFields from "@/data/panelFields.json"
+import "../reviewer.css"
 
 const FIRST_YEAR = 2004
 const LAST_YEAR = 2024

@@ -7,7 +7,7 @@ from time import monotonic
 import numpy as np
 import pyarrow.parquet as pq
 
-from paper_metadata import METADATA_COLUMNS, YEARS, source_signature
+from storage.paper_metadata import METADATA_COLUMNS, YEARS, source_signature
 
 
 def build_year(connection, ads_dir, embeddings_dir, year):

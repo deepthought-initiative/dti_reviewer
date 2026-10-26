@@ -1,0 +1,17 @@
+routes
+======
+
+.. py:module:: routes
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/routes/admin/index
+   /autoapi/routes/api/index
+   /autoapi/routes/auth/index
+
+

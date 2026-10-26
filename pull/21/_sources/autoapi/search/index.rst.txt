@@ -1,0 +1,17 @@
+search
+======
+
+.. py:module:: search
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/search/embedding_cache/index
+   /autoapi/search/similarity_engine/index
+   /autoapi/search/tasks/index
+
+

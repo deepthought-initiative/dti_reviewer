@@ -9,6 +9,8 @@ const options = [
   { id: "top_k_similarity", label: "Top K average", detail: "Each person's K most similar papers" },
 ]
 
+const isPositiveInteger = (value: string) => Number.isSafeInteger(Number(value)) && Number(value) >= 1
+
 export function ReviewerSort({ sortId, label, k, onSort, onKChange }: {
   sortId: string
   label: string
@@ -21,7 +23,7 @@ export function ReviewerSort({ sortId, label, k, onSort, onKChange }: {
   const root = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
   const id = useId()
-  const validK = Number.isSafeInteger(Number(draft)) && Number(draft) >= 1
+  const validK = isPositiveInteger(draft)
 
   useEffect(() => {
     if (!open) return
@@ -67,7 +69,7 @@ export function ReviewerSort({ sortId, label, k, onSort, onKChange }: {
             onChange={(event) => {
               const value = event.target.value
               setDraft(value)
-              if (Number.isSafeInteger(Number(value)) && Number(value) >= 1) onKChange(Number(value))
+              if (isPositiveInteger(value)) onKChange(Number(value))
             }}
             onBlur={() => setDraft(String(k))} />
           <p id={`${id}-help`}>{validK

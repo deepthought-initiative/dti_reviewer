@@ -7,7 +7,7 @@ from time import monotonic
 import numpy as np
 import pyarrow.parquet as pq
 
-from paper_metadata import METADATA_COLUMNS, source_signature
+from paper_metadata import METADATA_COLUMNS, YEARS, source_signature
 
 
 def build_year(connection, ads_dir, embeddings_dir, year):
@@ -91,7 +91,7 @@ def build_metadata(ads_dir, embeddings_dir, output):
                 papers INTEGER NOT NULL
             );
         """)
-        for year in range(2004, 2025):
+        for year in YEARS:
             count = build_year(connection, ads_dir, embeddings_dir, year)
             total += count
             print(
@@ -131,7 +131,7 @@ def metadata_is_current(ads_dir, embeddings_dir, output):
         ))
         return sources == {
             year: source_signature(ads_dir, embeddings_dir, year)
-            for year in range(2004, 2025)
+            for year in YEARS
         }
     except sqlite3.DatabaseError:
         return False
@@ -139,14 +139,19 @@ def metadata_is_current(ads_dir, embeddings_dir, output):
         connection.close()
 
 
-ads_dir = Path(os.environ["ADS_UNIFIED_DIR"])
-embeddings_dir = Path(os.environ["EMBEDDINGS_DIR"])
-output = Path(os.environ["PAPER_METADATA_PATH"])
-output.parent.mkdir(parents=True, exist_ok=True)
-if metadata_is_current(ads_dir, embeddings_dir, output):
-    print("Paper metadata is current; no rebuild needed.", flush=True)
-else:
+def main():
+    ads_dir = Path(os.environ["ADS_UNIFIED_DIR"])
+    embeddings_dir = Path(os.environ["EMBEDDINGS_DIR"])
+    output = Path(os.environ["PAPER_METADATA_PATH"])
+    output.parent.mkdir(parents=True, exist_ok=True)
+    if metadata_is_current(ads_dir, embeddings_dir, output):
+        print("Paper metadata is current; no rebuild needed.", flush=True)
+        return
     # Docker runs one initializer; these are leftovers from interrupted builds.
     for suffix in (".building", ".building-journal"):
         output.with_name(output.name + suffix).unlink(missing_ok=True)
     build_metadata(ads_dir, embeddings_dir, output)
+
+
+if __name__ == "__main__":
+    main()

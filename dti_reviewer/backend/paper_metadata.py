@@ -6,6 +6,18 @@ import pandas as pd
 
 
 METADATA_COLUMNS = ["title", "bibcode", "author", "orcid_user", "aff"]
+FIRST_YEAR = 2004
+LAST_YEAR = 2024
+YEARS = range(FIRST_YEAR, LAST_YEAR + 1)
+
+
+def is_valid_year_range(year_start, year_end):
+    # type() rather than isinstance(): bool is an int subclass.
+    return (
+        type(year_start) is int
+        and type(year_end) is int
+        and FIRST_YEAR <= year_start <= year_end <= LAST_YEAR
+    )
 
 
 def source_signature(ads_dir, embeddings_dir, year):
@@ -16,7 +28,10 @@ def source_signature(ads_dir, embeddings_dir, year):
     ]
     # shortcut: trusts size and mtime; hash files if these can mask changes.
     stats = [path.stat() for path in paths]
-    return json.dumps([METADATA_COLUMNS, [(stat.st_size, stat.st_mtime_ns) for stat in stats]])
+    return json.dumps([
+        METADATA_COLUMNS,
+        [(stat.st_size, stat.st_mtime_ns) for stat in stats],
+    ])
 
 
 def read_paper_metadata(

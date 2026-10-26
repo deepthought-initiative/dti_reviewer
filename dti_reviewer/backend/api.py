@@ -12,6 +12,7 @@ from vector_store import save_vector
 from db import get_db
 from search_history import save_search_state
 from admin import no_cache
+from paper_metadata import FIRST_YEAR, LAST_YEAR, is_valid_year_range
 
 
 logger = logging.getLogger(__name__)
@@ -88,11 +89,12 @@ def search():
 
     year_start = data.get("year_start")
     year_end = data.get("year_end")
-    if (
-        type(year_start) is not int or type(year_end) is not int
-        or not 2004 <= year_start <= year_end <= 2024
-    ):
-        return jsonify(message="Choose whole years from 2004 to 2024, start before end"), 400
+    if not is_valid_year_range(year_start, year_end):
+        message = (
+            f"Choose whole years from {FIRST_YEAR} to {LAST_YEAR}, "
+            "start before end"
+        )
+        return jsonify(message=message), 400
 
     search_id = str(uuid4())
     db = get_db()
@@ -104,14 +106,21 @@ def search():
     try:
         query_experts_task.apply_async(
             args=[vector_id, objective, title],
-            kwargs={"database": current_app.config["DATABASE"],
-                    "year_start": year_start, "year_end": year_end},
+            kwargs={
+                "database": current_app.config["DATABASE"],
+                "year_start": year_start,
+                "year_end": year_end,
+            },
             task_id=search_id,
         )
     except Exception:
         logger.exception("Could not queue search %s", search_id)
-        save_search_state(current_app.config["DATABASE"], search_id, "FAILURE",
-                          error="Search could not be queued. Please start a new search.")
+        save_search_state(
+            current_app.config["DATABASE"],
+            search_id,
+            "FAILURE",
+            error="Search could not be queued. Please start a new search.",
+        )
     return jsonify(message="Task submitted", task_id=search_id), 202
 
 

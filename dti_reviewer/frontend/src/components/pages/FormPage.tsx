@@ -8,6 +8,9 @@ import { Textarea } from "@/components/ui/textarea"
 import panelFields from "@/panelFields.json"
 import "../../reviewer.css"
 
+const FIRST_YEAR = 2004
+const LAST_YEAR = 2024
+
 const fillExampleOnTab = (
     event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
     setValue: (value: string) => void,
@@ -29,17 +32,18 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
     const [objective, setObjective] = useState("")
     const [title, setTitle] = useState("")
     const [abstract, setAbstract] = useState("")
-    const [yearStart, setYearStart] = useState("2004")
-    const [yearEnd, setYearEnd] = useState("2024")
+    const [yearStart, setYearStart] = useState(String(FIRST_YEAR))
+    const [yearEnd, setYearEnd] = useState(String(LAST_YEAR))
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const keywords = panelFields[field as keyof typeof panelFields]
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault()
         const query = panel ? {
             objective: field,
             title: `Panel builder: ${field}`,
-            abstract: panelFields[field as keyof typeof panelFields],
+            abstract: keywords,
         } : { objective, title, abstract }
         if (loading || !query.objective.trim() || !query.title.trim() || !query.abstract?.trim()) return
 
@@ -59,7 +63,12 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
             const resp = await fetch(`${import.meta.env.BASE_URL}search`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ vector_id, ...query, year_start: Number(yearStart), year_end: Number(yearEnd) }),
+                body: JSON.stringify({
+                    vector_id,
+                    ...query,
+                    year_start: Number(yearStart),
+                    year_end: Number(yearEnd),
+                }),
             })
             if (resp.status === 401) return navigate("/login", { replace: true })
             if (!resp.ok) throw new Error(`Enqueue failed: HTTP ${resp.status}`)
@@ -79,19 +88,32 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
         <main className="reviewer-page">
             <header className="reviewer-heading">
                 <h1>{panel ? "Panel builder" : "Find a reviewer"}</h1>
-                <p>{panel ? "Choose a research field to find potential panel members using its predefined keywords." : "Match your research with authors and their published work."}</p>
+                <p>
+                    {panel
+                        ? "Choose a research field to find potential panel members using its predefined keywords."
+                        : "Match your research with authors and their published work."}
+                </p>
             </header>
             <form onSubmit={handleSubmit} className="reviewer-form">
-                {panel ? <div className="abstract-field">
-                    <label><span>Research field</span>
-                    <select autoFocus value={field} onChange={(event) => setField(event.target.value)} required>
-                        <option value="" disabled>Choose a field</option>
-                        {Object.keys(panelFields).map((name) => <option key={name} value={name}>{name}</option>)}
-                    </select></label>
-                    {field && <details className="saved-abstract"><summary>View search keywords</summary>
-                        <p>{panelFields[field as keyof typeof panelFields]}</p>
-                    </details>}
-                </div> : <>
+                {panel ? (
+                    <div className="abstract-field">
+                        <label>
+                            <span>Research field</span>
+                            <select autoFocus value={field} onChange={(event) => setField(event.target.value)} required>
+                                <option value="" disabled>Choose a field</option>
+                                {Object.keys(panelFields).map((name) => (
+                                    <option key={name} value={name}>{name}</option>
+                                ))}
+                            </select>
+                        </label>
+                        {keywords && (
+                            <details className="saved-abstract">
+                                <summary>View search keywords</summary>
+                                <p>{keywords}</p>
+                            </details>
+                        )}
+                    </div>
+                ) : <>
                     <p className="mb-4 text-xs text-muted-foreground">Press Tab in an empty field to fill with example data.</p>
                     <div className="proposal-fields">
                         <label><span>Objective</span>
@@ -112,20 +134,31 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
                     </label>
                 </>}
                 <div className="proposal-fields">
-                    <label><span>From year (inclusive)</span><Input type="number" min={2004} max={Number(yearEnd)} step={1}
-                        value={yearStart} onChange={(event) => setYearStart(event.target.value)} required /></label>
-                    <label><span>To year (inclusive)</span><Input type="number" min={Number(yearStart)} max={2024} step={1}
-                        value={yearEnd} onChange={(event) => setYearEnd(event.target.value)} required /></label>
+                    <label>
+                        <span>From year (inclusive)</span>
+                        <Input type="number" min={FIRST_YEAR} max={Number(yearEnd)} step={1}
+                            value={yearStart} onChange={(event) => setYearStart(event.target.value)} required />
+                    </label>
+                    <label>
+                        <span>To year (inclusive)</span>
+                        <Input type="number" min={Number(yearStart)} max={LAST_YEAR} step={1}
+                            value={yearEnd} onChange={(event) => setYearEnd(event.target.value)} required />
+                    </label>
                 </div>
                 <div className="form-actions">
-                    <span>Paper coverage: 2004–2024</span>
+                    <span>Paper coverage: {FIRST_YEAR}–{LAST_YEAR}</span>
                     <Button type="submit" disabled={loading} size="lg">
                         <MagnifyingGlass size={17} aria-hidden="true" />
                         {loading ? "Searching…" : panel ? "Find panel members" : "Find reviewers"}
                     </Button>
                 </div>
             </form>
-            {error && <div className="search-error" role="alert"><strong>Search could not start</strong><p>{error}</p></div>}
+            {error && (
+                <div className="search-error" role="alert">
+                    <strong>Search could not start</strong>
+                    <p>{error}</p>
+                </div>
+            )}
         </main>
     )
 }

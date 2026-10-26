@@ -15,6 +15,18 @@ Module Contents
    :value: ['title', 'bibcode', 'author', 'orcid_user', 'aff']
 
 
+.. py:data:: FIRST_YEAR
+   :value: 2004
+
+
+.. py:data:: LAST_YEAR
+   :value: 2024
+
+
+.. py:data:: YEARS
+
+.. py:function:: is_valid_year_range(year_start, year_end)
+
 .. py:function:: source_signature(ads_dir, embeddings_dir, year)
 
 .. py:function:: read_paper_metadata(database, ads_dir, embeddings_dir, year, row_indices, on_records_read=None)

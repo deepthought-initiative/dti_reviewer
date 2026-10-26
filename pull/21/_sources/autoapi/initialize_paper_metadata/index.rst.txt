@@ -6,8 +6,6 @@ initialize_paper_metadata
 
 
 
-
-
 Module Contents
 ---------------
 
@@ -17,9 +15,5 @@ Module Contents
 
 .. py:function:: metadata_is_current(ads_dir, embeddings_dir, output)
 
-.. py:data:: ads_dir
-
-.. py:data:: embeddings_dir
-
-.. py:data:: output
+.. py:function:: main()
 

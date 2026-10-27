@@ -17,6 +17,10 @@ export interface Author {
   n_papers: number
   top_similarity: number
   average_similarity: number
+  position_score: number
+  similarity_rank: number
+  position_rank: number
+  combined_rank: number
   papers: Paper[]
 }
 

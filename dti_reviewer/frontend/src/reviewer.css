@@ -61,18 +61,23 @@
 .reviewer-sort { position: relative; flex-shrink: 0; }
 .sort-trigger { height: 40px; border-color: #c9d5e0; color: var(--reviewer-ink); font-size: 13px; }
 .sort-trigger > svg:first-child { color: var(--reviewer-teal); }
-.sort-panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 10; width: 300px; max-width: calc(100vw - 32px); padding: 16px; background: white; border: 1px solid var(--reviewer-line); border-radius: 9px; box-shadow: 0 8px 24px #243b531a; }
-.sort-panel legend { padding: 0 8px 8px; font-size: 12px; font-weight: 600; }
-.sort-option { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+.sort-panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 10; width: 300px; max-width: calc(100vw - 32px); padding: 12px; background: white; border: 1px solid var(--reviewer-line); border-radius: 12px; box-shadow: 0 12px 32px #243b531a; }
+.sort-panel legend { padding: 4px 12px 12px; font-size: 12px; font-weight: 600; }
+.sort-option { display: flex; align-items: center; gap: 6px; margin-top: 4px; padding: 12px; border-radius: 8px; font-size: 13px; }
+.sort-option:hover { background: #f4f7fa; }
+.sort-option label { display: flex; align-items: center; flex: 1; gap: 12px; min-width: 0; cursor: pointer; }
 .sort-option:has(input:checked) { background: #e8f2f0; color: #1d625a; }
-.sort-option input { accent-color: var(--reviewer-teal); }
-.sort-option small { display: block; margin-top: 3px; color: #586b7c; font-size: 11px; }
+.sort-option input { flex-shrink: 0; accent-color: var(--reviewer-teal); }
+.sort-option small { display: block; margin-top: 4px; color: #586b7c; font-size: 11px; line-height: 1.5; }
+.sort-info { display: inline-flex; flex-shrink: 0; padding: 4px; border-radius: 4px; color: #586b7c; }
+.sort-info:hover { color: var(--reviewer-teal); }
+.sort-info:focus-visible { outline: 2px solid var(--reviewer-teal); outline-offset: 2px; }
 .sort-k { display: grid; grid-template-columns: 1fr 76px; align-items: center; gap: 10px; margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--reviewer-line); }
 .sort-k label { font-size: 12px; font-weight: 500; }
 .sort-k input { text-align: center; }
 .sort-k p, .sort-note { color: #586b7c; font-size: 11px; line-height: 1.5; }
 .sort-k p { grid-column: 1 / -1; margin: 0; }
-.sort-note { margin: 12px 8px 0; }
+.sort-note { margin: 12px 0 0; padding: 12px 12px 0; border-top: 1px solid var(--reviewer-line); }
 .reviewer-table-scroll { max-height: 650px; overflow: auto; border: 1px solid var(--reviewer-line); border-radius: 9px; }
 .reviewer-table { border-collapse: separate; border-spacing: 0; color: var(--reviewer-ink); }
 .reviewer-table th { position: sticky; top: 0; z-index: 2; height: 46px; padding: 0 14px; background: #edf2f7; color: #40566b; text-transform: none; letter-spacing: normal; font-size: 12px; border-bottom: 1px solid #c9d5e0; }

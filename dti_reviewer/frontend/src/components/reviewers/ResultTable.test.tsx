@@ -22,6 +22,10 @@ describe("ResultTable component", () => {
                 n_papers: 1,
                 top_similarity: 0.95,
                 average_similarity: 0.95,
+                position_score: 1,
+                similarity_rank: 1,
+                position_rank: 1,
+                combined_rank: 2,
                 papers: [{ title: "Paper", bibcode: "2024ApJ...970...42S", year: 2024, similarity: 0.95 }],
             }],
         }

@@ -1,12 +1,14 @@
 import { useEffect, useId, useRef, useState } from "react"
-import { CaretDown, FunnelSimple } from "@phosphor-icons/react"
+import { CaretDown, FunnelSimple, Info } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 const options = [
-  { id: "average_similarity", label: "Average similarity", detail: "All matched papers" },
-  { id: "top_similarity", label: "Top similarity", detail: "The single highest paper score" },
+  { id: "average_similarity", label: "Average similarity", detail: "Average of matched papers" },
+  { id: "top_similarity", label: "Top similarity", detail: "Highest-scoring paper" },
   { id: "top_k_similarity", label: "Top K average", detail: "Each person's K most similar papers" },
+  { id: "combined_rank", label: "Combined rank", detail: "Paper position + average similarity" },
 ]
 
 const isPositiveInteger = (value: string) => Number.isSafeInteger(Number(value)) && Number(value) >= 1
@@ -55,11 +57,32 @@ export function ReviewerSort({ sortId, label, k, onSort, onKChange }: {
         <fieldset>
           <legend>Sort by</legend>
           {options.map((option) => (
-            <label className="sort-option" key={option.id}>
-              <input type="radio" name={id} value={option.id} checked={sortId === option.id}
-                onChange={() => onSort(option.id)} />
-              <span>{option.label}<small>{option.detail}</small></span>
-            </label>
+            <div className="sort-option" key={option.id}>
+              <label>
+                <input type="radio" name={id} value={option.id} checked={sortId === option.id}
+                  onChange={() => onSort(option.id)} />
+                <span>{option.label}<small>{option.detail}</small></span>
+              </label>
+              {option.id === "combined_rank" && <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" aria-label="Combined rank reference" className="sort-info"><Info size={17} aria-hidden="true" /></button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="end" sideOffset={8} collisionPadding={16}
+                  className="max-w-[min(320px,calc(100vw-32px))] space-y-3 p-4 text-left leading-5 text-pretty">
+                  <p className="font-semibold">Combined rank reference</p>
+                  <ol className="list-decimal space-y-3 pl-4">
+                    <li><strong>Paper positions.</strong> The system ranks papers by similarity, highest first. Each person's position score is the sum of <strong>1 / paper rank</strong> across their papers.</li>
+                    <li><strong>Person ranks.</strong> The system ranks people separately by position score and average similarity. Higher scores get lower rank numbers.</li>
+                    <li><strong>Combined rank.</strong> The system adds each person's two ranks. The lowest sum comes first.</li>
+                  </ol>
+                  <div className="space-y-2 border-t border-white/20 pt-3 text-[11px] leading-4">
+                    <p>Equal scores share the average of their rank positions.</p>
+                    <p>For equal sums, the system sorts by average similarity, highest first. If those scores also match, it sorts by ORCID.</p>
+                    <p>Filtering the reviewer list does not change these ranks.</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>}
+            </div>
           ))}
         </fieldset>
         {sortId === "top_k_similarity" && <div className="sort-k">
@@ -76,7 +99,9 @@ export function ReviewerSort({ sortId, label, k, onSort, onKChange }: {
             ? "Fewer than K papers? We average the papers available."
             : "Enter a whole number of 1 or more."}</p>
         </div>}
-        <p className="sort-note">Highest scores first. Results update instantly.</p>
+        <p className="sort-note">
+          {sortId === "combined_rank" ? "Lowest rank sum first" : "Highest scores first"}
+        </p>
       </div>}
     </div>
   )

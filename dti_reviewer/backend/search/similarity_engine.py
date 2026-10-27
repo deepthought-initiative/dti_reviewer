@@ -74,6 +74,7 @@ class SimilarityEnginePapers:
     def attach_records(self, hits, objective, on_records_read=None):
         merged_hits = []
         hits = pd.DataFrame(hits, columns=["year", "row_index", "similarity"])
+        hits["paper_rank"] = hits["similarity"].rank(ascending=False)
         records = pd.DataFrame()
         if len(hits):
             records = pd.concat(
@@ -83,8 +84,9 @@ class SimilarityEnginePapers:
                 for year, group in hits.groupby("year")
             ).loc[hits.index]
 
-        for (_, df_row), year, similarity in zip(
-            records.iterrows(), hits["year"], hits["similarity"]
+        for (_, df_row), year, similarity, paper_rank in zip(
+            records.iterrows(), hits["year"], hits["similarity"],
+            hits["paper_rank"],
         ):
             authors = df_row["author"]
             if authors is None or len(authors) == 0:
@@ -114,6 +116,7 @@ class SimilarityEnginePapers:
                     "orcid": orcid,
                     "year": year,
                     "similarity": similarity,
+                    "paper_rank": paper_rank,
                 }
             )
 
@@ -128,6 +131,7 @@ class SimilarityEnginePapers:
                 "orcid",
                 "year",
                 "similarity",
+                "paper_rank",
             ],
         )
         read_in["author"] = read_in["author"].apply(truncate_list)
@@ -159,6 +163,7 @@ class SimilarityEnginePapers:
                 "orcid",
                 "year",
                 "similarity",
+                "paper_rank",
                 "block",
             ]
         ]
@@ -195,11 +200,12 @@ class SimilarityEnginePapers:
                     "n_papers": len(group),
                     "top_similarity": group["similarity"].max(),
                     "average_similarity": group["similarity"].mean(),
+                    "position_score": (1 / group["paper_rank"]).sum(),
                     "papers": papers,
                 }
             )
 
-        return (
+        ranked = (
             pd.DataFrame(
                 people,
                 columns=[
@@ -210,9 +216,20 @@ class SimilarityEnginePapers:
                     "n_papers",
                     "top_similarity",
                     "average_similarity",
+                    "position_score",
                     "papers",
                 ],
             )
             .sort_values("average_similarity", ascending=False)
             .reset_index(drop=True)
         )
+        ranked["similarity_rank"] = ranked["average_similarity"].rank(
+            ascending=False
+        )
+        ranked["position_rank"] = ranked["position_score"].rank(
+            ascending=False
+        )
+        ranked["combined_rank"] = (
+            ranked["similarity_rank"] + ranked["position_rank"]
+        )
+        return ranked

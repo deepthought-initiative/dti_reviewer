@@ -21,6 +21,7 @@ export function ResultTable({ results }: { results: SearchResults }) {
   const [filter, setFilter] = useState("")
   const [k, setK] = useState(3)
   const topKSelected = sorting[0]?.id === "top_k_similarity"
+  const combinedSelected = sorting[0]?.id === "combined_rank"
   const authors = useMemo(() => results.authors.map((author) => {
     const topPapers = author.papers.slice(0, k)
     const total = topPapers.reduce((sum, paper) => sum + paper.similarity, 0)
@@ -31,11 +32,24 @@ export function ResultTable({ results }: { results: SearchResults }) {
     accessorKey: "top_k_similarity", header: `Top ${k} average`, size: 155, minSize: 140,
     enableGlobalFilter: false,
     cell: ({ getValue }) => <span className="total-score">{getValue<number>().toFixed(3)}</span>,
+  }, {
+    accessorKey: "combined_rank", header: "Combined rank", size: 155, minSize: 140,
+    enableGlobalFilter: false,
+    sortDescFirst: false,
+    sortingFn: (a, b) => a.original.combined_rank - b.original.combined_rank
+      || b.original.average_similarity - a.original.average_similarity
+      || a.original.orcid.localeCompare(b.original.orcid),
+    cell: ({ row }) => <Tooltip>
+      <TooltipTrigger asChild><span tabIndex={0} className="total-score">{row.original.combined_rank}</span></TooltipTrigger>
+      <TooltipContent>Similarity rank {row.original.similarity_rank} + position rank {row.original.position_rank}</TooltipContent>
+    </Tooltip>,
   }], [k])
   const table = useReactTable({
     data: authors,
     columns,
-    state: { sorting, globalFilter: filter, columnVisibility: { top_k_similarity: topKSelected } },
+    state: { sorting, globalFilter: filter, columnVisibility: {
+      top_k_similarity: topKSelected, combined_rank: combinedSelected,
+    } },
     onSortingChange: setSorting,
     onGlobalFilterChange: setFilter,
     globalFilterFn: "includesString",
@@ -76,7 +90,7 @@ export function ResultTable({ results }: { results: SearchResults }) {
         </div>
         <ReviewerSort sortId={sorting[0]?.id ?? ""} k={k}
           label={String(table.getColumn(sorting[0]?.id)?.columnDef.header ?? "Sort reviewers")}
-          onSort={(id) => { setSorting([{ id, desc: true }]); table.setPageIndex(0) }}
+          onSort={(id) => { setSorting([{ id, desc: id !== "combined_rank" }]); table.setPageIndex(0) }}
           onKChange={(value) => { setK(value); table.setPageIndex(0) }} />
       </div>
       <div className="reviewer-table-scroll" role="region" aria-label="Reviewer results" tabIndex={0}>

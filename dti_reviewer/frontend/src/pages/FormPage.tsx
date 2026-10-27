@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { MagnifyingGlass } from "@phosphor-icons/react"
+import { ArrowLineRight, Info, MagnifyingGlass } from "@phosphor-icons/react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import panelFields from "@/data/panelFields.json"
 import "../reviewer.css"
 
@@ -23,10 +24,16 @@ const fillExampleOnTab = (
 
 const FormPage = ({ panel = false }: { panel?: boolean }) => {
     const navigate = useNavigate()
+    const [showExampleHint, setShowExampleHint] = useState(false)
+    const [exampleHintOpen, setExampleHintOpen] = useState(true)
     const mounted = useRef(true)
     useEffect(() => {
         mounted.current = true
-        return () => { mounted.current = false }
+        const timer = window.setTimeout(() => setShowExampleHint(true), 1000)
+        return () => {
+            mounted.current = false
+            window.clearTimeout(timer)
+        }
     }, [])
     const [field, setField] = useState("")
     const [objective, setObjective] = useState("")
@@ -114,24 +121,41 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
                         )}
                     </div>
                 ) : <>
-                    <p className="mb-4 text-xs text-muted-foreground">Press Tab in an empty field to fill with example data.</p>
-                    <div className="proposal-fields">
-                        <label><span>Objective</span>
-                            <Input autoFocus value={objective} onChange={(event) => setObjective(event.target.value)}
+                    <div className="mb-2 flex items-center gap-2">
+                        <label htmlFor="search-objective">Objective (search name)</label>
+                        <Tooltip>
+                            <TooltipTrigger asChild><button type="button" aria-label="About the search name" className="text-muted-foreground"><Info size={16} aria-hidden="true" /></button></TooltipTrigger>
+                            <TooltipContent className="max-w-xs">A name to identify this search. This does not affect reviewer matching.</TooltipContent>
+                        </Tooltip>
+                    </div>
+                    <Tooltip open={showExampleHint && exampleHintOpen} onOpenChange={setExampleHintOpen}>
+                        <TooltipTrigger asChild>
+                            <Input id="search-objective" autoFocus value={objective} onChange={(event) => setObjective(event.target.value)}
                                 onKeyDown={(event) => fillExampleOnTab(event, setObjective)}
                                 placeholder="Supermassive Black Holes and Active Galaxies" required />
-                        </label>
-                        <label><span>Title</span>
-                            <Input value={title} onChange={(event) => setTitle(event.target.value)}
-                                onKeyDown={(event) => fillExampleOnTab(event, setTitle)}
-                                placeholder="Black Hole Growth and Galaxy Evolution" required />
-                        </label>
-                    </div>
-                    <label className="abstract-field"><span>Abstract</span>
-                        <Textarea value={abstract} onChange={(event) => setAbstract(event.target.value)}
+                        </TooltipTrigger>
+                        <TooltipContent
+                            side="top" align="end" sideOffset={10}
+                            avoidCollisions collisionPadding={16} sticky="always"
+                            className="max-w-[min(220px,calc(100vw-32px),var(--radix-tooltip-content-available-width))] px-3 py-2 text-left text-xs leading-5 text-pretty"
+                        >Press <span className="inline-flex items-center gap-1 align-middle"><ArrowLineRight size={13} aria-hidden="true" />Tab</span> in an empty field to try an example.</TooltipContent>
+                    </Tooltip>
+                    <fieldset className="my-6 border-t border-slate-200 pt-4">
+                        <legend className="pr-3 text-sm font-semibold"><span className="inline-flex items-center gap-2">Proposal
+                            <Tooltip>
+                                <TooltipTrigger asChild><button type="button" aria-label="About proposal matching" className="text-muted-foreground"><Info size={16} aria-hidden="true" /></button></TooltipTrigger>
+                                <TooltipContent className="max-w-xs">Keep the proposal title and abstract together. Only the abstract is used to find matching reviewers.</TooltipContent>
+                            </Tooltip>
+                        </span></legend>
+                        <label htmlFor="proposal-title" className="mb-2">Title</label>
+                        <Input id="proposal-title" value={title} onChange={(event) => setTitle(event.target.value)}
+                            onKeyDown={(event) => fillExampleOnTab(event, setTitle)}
+                            placeholder="Black Hole Growth and Galaxy Evolution" required />
+                        <label htmlFor="proposal-abstract" className="abstract-field mb-2">Abstract</label>
+                        <Textarea id="proposal-abstract" value={abstract} onChange={(event) => setAbstract(event.target.value)}
                             onKeyDown={(event) => fillExampleOnTab(event, setAbstract)}
                             placeholder="We study supermassive black hole growth in active galactic nuclei and its relationship to galaxy evolution. We examine accretion disks, jets, and X-ray emission from quasars. We investigate black hole mass measurements, host galaxy properties, and the effects of active galactic nuclei on star formation." required />
-                    </label>
+                    </fieldset>
                 </>}
                 <div className="proposal-fields">
                     <label>

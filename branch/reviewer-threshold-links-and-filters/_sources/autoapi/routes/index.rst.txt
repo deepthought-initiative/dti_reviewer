@@ -13,5 +13,6 @@ Submodules
    /autoapi/routes/admin/index
    /autoapi/routes/api/index
    /autoapi/routes/auth/index
+   /autoapi/routes/panel_presets/index
 
 

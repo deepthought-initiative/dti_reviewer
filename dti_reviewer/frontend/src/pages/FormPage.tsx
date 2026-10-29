@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import panelFields from "@/data/panelFields.json"
+import PanelFields from "@/components/PanelFields"
 import "../reviewer.css"
 
 const FIRST_YEAR = 2004
@@ -35,7 +35,7 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
             window.clearTimeout(timer)
         }
     }, [])
-    const [field, setField] = useState("")
+    const [savingPreset, setSavingPreset] = useState(false)
     const [objective, setObjective] = useState("")
     const [title, setTitle] = useState("")
     const [abstract, setAbstract] = useState("")
@@ -43,16 +43,15 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
     const [yearEnd, setYearEnd] = useState(String(LAST_YEAR))
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const keywords = panelFields[field as keyof typeof panelFields]
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault()
         const query = panel ? {
-            objective: field,
-            title: `Panel builder: ${field}`,
-            abstract: keywords,
+            objective,
+            title: `Panel builder: ${objective}`,
+            abstract,
         } : { objective, title, abstract }
-        if (loading || !query.objective.trim() || !query.title.trim() || !query.abstract?.trim()) return
+        if (loading || savingPreset || !query.objective.trim() || !query.title.trim() || !query.abstract?.trim()) return
 
         setLoading(true)
         setError(null)
@@ -97,29 +96,17 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
                 <h1>{panel ? "Panel Builder" : "Advanced Search"}</h1>
                 <p>
                     {panel
-                        ? "Choose a research field to find potential panel members using its predefined keywords."
+                        ? "Choose a research field or use your own keywords to find potential panel members."
                         : "Match your research with authors and their published work."}
                 </p>
             </header>
             <form onSubmit={handleSubmit} className={`reviewer-form${panel ? " panel-form" : ""}`}>
                 {panel ? (
-                    <div className="panel-field">
-                        <label>
-                            <span>Research field</span>
-                            <select autoFocus value={field} onChange={(event) => setField(event.target.value)} required>
-                                <option value="" disabled>Choose a field</option>
-                                {Object.keys(panelFields).map((name) => (
-                                    <option key={name} value={name}>{name}</option>
-                                ))}
-                            </select>
-                        </label>
-                        {keywords && (
-                            <details className="saved-abstract">
-                                <summary>View search keywords</summary>
-                                <p>{keywords}</p>
-                            </details>
-                        )}
-                    </div>
+                    <PanelFields name={objective} keywords={abstract} disabled={loading || savingPreset}
+                        onSavingChange={setSavingPreset} onChange={(name, keywords) => {
+                            setObjective(name)
+                            setAbstract(keywords)
+                        }} />
                 ) : <>
                     <div className="mb-2 flex items-center gap-2">
                         <label htmlFor="search-objective">Objective (search name)</label>
@@ -171,7 +158,7 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
                 </div>
                 <div className="form-actions">
                     <span>Paper coverage: {FIRST_YEAR}–{LAST_YEAR}</span>
-                    <Button type="submit" disabled={loading} size="lg">
+                    <Button type="submit" disabled={loading || savingPreset} size="lg">
                         <MagnifyingGlass size={17} aria-hidden="true" />
                         {loading ? "Searching…" : panel ? "Find panel members" : "Find reviewers"}
                     </Button>

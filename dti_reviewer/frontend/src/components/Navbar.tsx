@@ -21,8 +21,8 @@ export default function Component({ isAdmin }: { isAdmin: boolean }) {
                             <span className="font-semibold">DTI Reviewer</span>
                         </div>
                         <nav className="flex flex-col gap-1 p-4" aria-label="Mobile navigation">
-                            <Button asChild variant="ghost" className="justify-start"><NavLink to="/" end className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Home</NavLink></Button>
-                            <Button asChild variant="ghost" className="justify-start"><NavLink to="/panel" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Panel builder</NavLink></Button>
+                            <Button asChild variant="ghost" className="justify-start"><NavLink to="/" end className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Panel Builder</NavLink></Button>
+                            <Button asChild variant="ghost" className="justify-start"><NavLink to="/advanced-search" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Advanced Search</NavLink></Button>
                             <Button asChild variant="ghost" className="justify-start"><NavLink to="/chats">Chats</NavLink></Button>
                             <Button asChild variant="ghost" className="justify-start"><NavLink to="/about" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">About Us</NavLink></Button>
                             <Button asChild variant="ghost" className="justify-start"><a href="https://github.com/deepthought-initiative/dti_reviewer" target="_blank" rel="noopener noreferrer"><GithubLogo size={18} aria-hidden="true" />GitHub</a></Button>
@@ -35,8 +35,8 @@ export default function Component({ isAdmin }: { isAdmin: boolean }) {
                 <span className="font-semibold">DTI Reviewer</span>
             </Link>
             <nav className="hidden items-center gap-1 lg:flex" aria-label="Main navigation">
-                <Button asChild variant="ghost"><NavLink to="/" end className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Home</NavLink></Button>
-                <Button asChild variant="ghost"><NavLink to="/panel" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Panel builder</NavLink></Button>
+                <Button asChild variant="ghost"><NavLink to="/" end className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Panel Builder</NavLink></Button>
+                <Button asChild variant="ghost"><NavLink to="/advanced-search" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">Advanced Search</NavLink></Button>
                 <Button asChild variant="ghost"><NavLink to="/chats">Chats</NavLink></Button>
                 <Button asChild variant="ghost"><NavLink to="/about" className="aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground">About Us</NavLink></Button>
                 <Button asChild variant="ghost"><a href="https://github.com/deepthought-initiative/dti_reviewer" target="_blank" rel="noopener noreferrer"><GithubLogo size={18} aria-hidden="true" />Code</a></Button>

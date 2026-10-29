@@ -94,16 +94,16 @@ const FormPage = ({ panel = false }: { panel?: boolean }) => {
     return (
         <main className="reviewer-page">
             <header className="reviewer-heading">
-                <h1>{panel ? "Panel builder" : "Find a reviewer"}</h1>
+                <h1>{panel ? "Panel Builder" : "Advanced Search"}</h1>
                 <p>
                     {panel
                         ? "Choose a research field to find potential panel members using its predefined keywords."
                         : "Match your research with authors and their published work."}
                 </p>
             </header>
-            <form onSubmit={handleSubmit} className="reviewer-form">
+            <form onSubmit={handleSubmit} className={`reviewer-form${panel ? " panel-form" : ""}`}>
                 {panel ? (
-                    <div className="abstract-field">
+                    <div className="panel-field">
                         <label>
                             <span>Research field</span>
                             <select autoFocus value={field} onChange={(event) => setField(event.target.value)} required>

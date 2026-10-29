@@ -1,9 +1,12 @@
 from time import monotonic
 
+from celery.signals import worker_init
+
 from celery_app import celery
-from similarity_engine import REVIEWER_PAPER_COUNT, SimilarityEnginePapers
-from vector_store import load_vector
-from search_history import save_search_state
+from search.similarity_engine import REVIEWER_PAPER_COUNT, SimilarityEnginePapers
+from storage.vector_store import load_vector
+from storage.search_history import save_search_state
+from storage.paper_metadata import YEARS, is_valid_year_range
 
 
 engine = None
@@ -16,10 +19,19 @@ def initialize_similarity_engine():
     return engine
 
 
+@worker_init.connect
+def preload_embeddings(**kwargs):
+    initialize_similarity_engine().embedding_cache.preload(YEARS)
+
+
 @celery.task(bind=True)
-def query_experts_task(self, vector_id, objective, title, database=None):
+def query_experts_task(
+    self, vector_id, objective, title, year_start, year_end, database=None
+):
     try:
-        results = find_reviewers(self, vector_id, objective, title, database)
+        results = find_reviewers(
+            self, vector_id, objective, title, database, year_start, year_end
+        )
         save_search_state(database, self.request.id, "SUCCESS", results=results)
         return results
     except Exception:
@@ -30,7 +42,11 @@ def query_experts_task(self, vector_id, objective, title, database=None):
         raise
 
 
-def find_reviewers(self, vector_id, objective, title, database):
+def find_reviewers(
+    self, vector_id, objective, title, database, year_start, year_end
+):
+    if not is_valid_year_range(year_start, year_end):
+        raise ValueError("Invalid search year range")
     similarity_engine = initialize_similarity_engine()
     query_vector = load_vector(vector_id)
     if query_vector is None:
@@ -50,13 +66,14 @@ def find_reviewers(self, vector_id, objective, title, database):
         self.update_state(state="PROGRESS", meta=progress)
 
     report_progress("scoring", 0)
-    for year in range(2004, 2025):
+    for year in range(year_start, year_end + 1):
         year_hits, year_paper_count = similarity_engine.score_papers_for_year(
             query_vector, year
         )
         proposal_hits.extend(year_hits)
         papers_scored += year_paper_count
-        report_progress("scoring", (year - 2003) / 21, year=year)
+        scored_share = (year - year_start + 1) / (year_end - year_start + 1)
+        report_progress("scoring", scored_share, year=year)
 
     proposal_hits = sorted(
         proposal_hits,
@@ -93,6 +110,8 @@ def find_reviewers(self, vector_id, objective, title, database):
     authors = similarity_engine.rollup(rows)
 
     return {
+        "year_start": year_start,
+        "year_end": year_end,
         "counts": {
             "papers": rows.attrs["papers"],
             "author_rows": rows.attrs["author_rows"],

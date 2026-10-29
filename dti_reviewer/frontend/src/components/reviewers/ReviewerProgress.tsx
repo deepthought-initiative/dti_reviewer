@@ -16,7 +16,7 @@ export function ReviewerProgress({ progress }: { progress: SearchProgress | null
   const readingPercent = progress && !scoring ? progress.percent : 0
   const steps = [
     {
-      label: progress && !scoring ? "Scored papers" : "Scoring papers",
+      label: progress && !scoring ? "TF-IDF similarity calculated" : "Calculating TF-IDF similarity",
       percent: scoringPercent,
       active: scoring,
       detail: progress
@@ -24,12 +24,12 @@ export function ReviewerProgress({ progress }: { progress: SearchProgress | null
         : "Waiting to start",
     },
     {
-      label: progress?.stage === "grouping" ? "Read matching papers" : "Reading matching papers",
+      label: progress?.stage === "grouping" ? "Papers ranked and retrieved" : "Ranking and retrieving papers",
       percent: readingPercent,
       active: reading,
       detail: progress && !scoring
-        ? `${(progress.papers_read ?? 0).toLocaleString()} / ${(progress.total_papers ?? 0).toLocaleString()} papers read`
-        : "Waiting for scoring",
+        ? `${(progress.papers_read ?? 0).toLocaleString()} / ${(progress.total_papers ?? 0).toLocaleString()} papers retrieved`
+        : "Waiting for TF-IDF similarity scores",
     },
   ]
 

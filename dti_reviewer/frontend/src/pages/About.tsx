@@ -6,18 +6,25 @@ const About = () => {
                 <p>
                     DTI Reviewer is an open-source tool for identifying experts in physics for tasks like peer review and collaboration.
                     As the global research community grows, finding qualified reviewers has become increasingly difficult.
-                    DTI Reviewer addresses this challenge using deterministic machine learning techniques to identify experts based on a dataset created by cross-matching NASA/ADS publications with ORCID profiles.
-                    Our initial approach uses TF-IDF to rank expertise.
+                    DTI Reviewer searches a local collection of publication records from SciX, with precomputed TF-IDF vectors for refereed papers from 2004 through 2024.
+                    It compares your search text with individual papers, then groups matching papers by author to suggest reviewers.
                 </p>
 
-                <h3 className="text-2xl font-semibold mt-6 mb-2">Example: Finding Experts with Research Vectors</h3>
+                <h3 className="text-2xl font-semibold mt-6 mb-2">How reviewers are ranked</h3>
                 <p>
-                    For each researcher, we build a knowledge vector by combining the titles and abstracts of their publications.
-                    These are embedded into a numerical vector space.
-                    When a user submits a query (e.g., the abstract of a new manuscript), we embed that query in the same space.
-                    We then compute cosine similarity between the query and each researcher’s vector to rank potential reviewers by how closely their past work aligns with the query.
-                    Submit your query via the web interface to get a ranked list of experts.
-                    Submit any length of text from a few words to a full-text paper.
+                    Your search text is transformed using the same TF-IDF model as the papers.
+                    Cosine similarity measures how closely their vocabulary matches within your selected years.
+                    The search selects up to 10,000 matching papers and excludes scores of 0.92 or higher as possible copies or close variations.
+                    Reviewers are initially ranked by the average similarity of their included papers, with other sorting options available in the results.
+                    Similarity measures how closely the vocabulary of a paper matches your search text. It does not directly measure a researcher’s expertise.
+                </p>
+
+                <h3 className="text-2xl font-semibold mt-6 mb-2">Author coverage and ORCID</h3>
+                <p>
+                    The current algorithm considers only the first two authors of each selected paper.
+                    It uses the ORCID identifiers already recorded in the publication metadata to group papers belonging to the same researcher.
+                    It does not look up or cross-match external ORCID profiles during a search.
+                    Authors without a recorded ORCID are currently excluded from reviewer results, so relevant researchers may be missing.
                 </p>
 
                 <p>

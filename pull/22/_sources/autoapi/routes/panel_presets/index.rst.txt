@@ -1,0 +1,27 @@
+routes.panel_presets
+====================
+
+.. py:module:: routes.panel_presets
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:data:: panel_presets_bp
+
+.. py:data:: PRESET_COLUMNS
+   :value: 'id, name, keywords, source_field, created_at, updated_at'
+
+
+.. py:function:: protect_presets()
+
+.. py:function:: list_presets()
+
+.. py:function:: delete_preset(preset_id)
+
+.. py:function:: save_preset(preset_id=None)
+

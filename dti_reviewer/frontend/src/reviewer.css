@@ -67,7 +67,10 @@
 .search-counts dl { margin: 8px 0 0; }
 .search-counts dl > div { display: flex; gap: 20px; justify-content: space-between; }
 .search-counts dd { font-variant-numeric: tabular-nums; font-weight: 500; }
-.results-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.results-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.orcid-filter { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.orcid-filter > svg { flex-shrink: 0; color: var(--reviewer-teal); }
+.orcid-filter input:focus-visible + svg { outline: 2px solid var(--reviewer-teal); outline-offset: 3px; border-radius: 3px; }
 .reviewer-filter { position: relative; display: flex; align-items: center; width: 390px; max-width: 100%; }
 .reviewer-filter > svg { position: absolute; left: 12px; color: #586b7c; pointer-events: none; }
 .reviewer-filter input { height: 40px; padding: 0 38px; font-size: 13px; border-color: #c9d5e0; box-shadow: none; }

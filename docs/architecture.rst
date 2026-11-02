@@ -36,8 +36,8 @@ The backend consists of:
 Key components:
 
 - ``app.py``: Main application entry point
-- ``api.py``: API route definitions
-- ``similarity_engine.py``: Core matching algorithm
+- ``routes/api.py``: API route definitions
+- ``search/similarity_engine.py``: Core matching algorithm
 
 Data Flow
 ---------

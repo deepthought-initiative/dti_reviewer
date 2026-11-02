@@ -1,0 +1,18 @@
+storage
+=======
+
+.. py:module:: storage
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/storage/db/index
+   /autoapi/storage/paper_metadata/index
+   /autoapi/storage/search_history/index
+   /autoapi/storage/vector_store/index
+
+

@@ -52,6 +52,7 @@ export const reviewerColumns: ColumnDef<Author>[] = [
   },
   {
     accessorKey: "orcid", header: "ORCID", size: 205, minSize: 180,
+    filterFn: (row) => Boolean(row.original.orcid.trim()),
     cell: ({ getValue }) => getValue<string>() ? (
       <a className="orcid-link" href={`https://orcid.org/${getValue<string>()}`} target="_blank" rel="noopener noreferrer">
         {getValue<string>()}<ArrowSquareOut size={12} aria-hidden="true" />

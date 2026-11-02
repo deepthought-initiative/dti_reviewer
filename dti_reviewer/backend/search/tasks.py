@@ -115,8 +115,8 @@ def find_reviewers(
         "counts": {
             "papers": rows.attrs["papers"],
             "author_rows": rows.attrs["author_rows"],
-            "with_orcid": len(rows),
-            "people": rows["orcid"].nunique(),
+            "with_orcid": int(rows["orcid"].ne("").sum()),
+            "people": len(authors),
         },
         "authors": authors.to_dict(orient="records"),
     }

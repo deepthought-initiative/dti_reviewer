@@ -77,7 +77,7 @@ export function ReviewerSort({ sortId, label, k, onSort, onKChange }: {
                   </ol>
                   <div className="space-y-2 border-t border-white/20 pt-3 text-[11px] leading-4">
                     <p>Equal scores share the average of their rank positions.</p>
-                    <p>For equal sums, the system sorts by average similarity, highest first. If those scores also match, it sorts by ORCID.</p>
+                    <p>For equal sums, the system sorts by average similarity, highest first. If those scores also match, it sorts by ORCID, then author name.</p>
                     <p>Filtering the reviewer list does not change these ranks.</p>
                   </div>
                 </TooltipContent>

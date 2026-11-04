@@ -1,7 +1,7 @@
 import pytest
 from flask import Flask
 
-from api import api_bp
+from routes.api import api_bp
 
 
 @pytest.fixture

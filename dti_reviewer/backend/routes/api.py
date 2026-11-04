@@ -7,11 +7,12 @@ from flask import Blueprint, current_app, jsonify, request
 from flask_login import current_user, login_required
 
 from celery_app import celery
-from tasks import initialize_similarity_engine, query_experts_task
-from vector_store import save_vector
-from db import get_db
-from search_history import save_search_state
-from admin import no_cache
+from search.tasks import initialize_similarity_engine, query_experts_task
+from storage.vector_store import save_vector
+from storage.db import get_db
+from storage.search_history import save_search_state
+from routes.admin import no_cache
+from storage.paper_metadata import FIRST_YEAR, LAST_YEAR, is_valid_year_range
 
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,15 @@ def search():
         if not isinstance(value, str) or not value.strip():
             return jsonify(message=f"Missing '{name}' parameter"), 400
 
+    year_start = data.get("year_start")
+    year_end = data.get("year_end")
+    if not is_valid_year_range(year_start, year_end):
+        message = (
+            f"Choose whole years from {FIRST_YEAR} to {LAST_YEAR}, "
+            "start before end"
+        )
+        return jsonify(message=message), 400
+
     search_id = str(uuid4())
     db = get_db()
     db.execute(
@@ -96,13 +106,21 @@ def search():
     try:
         query_experts_task.apply_async(
             args=[vector_id, objective, title],
-            kwargs={"database": current_app.config["DATABASE"]},
+            kwargs={
+                "database": current_app.config["DATABASE"],
+                "year_start": year_start,
+                "year_end": year_end,
+            },
             task_id=search_id,
         )
     except Exception:
         logger.exception("Could not queue search %s", search_id)
-        save_search_state(current_app.config["DATABASE"], search_id, "FAILURE",
-                          error="Search could not be queued. Please start a new search.")
+        save_search_state(
+            current_app.config["DATABASE"],
+            search_id,
+            "FAILURE",
+            error="Search could not be queued. Please start a new search.",
+        )
     return jsonify(message="Task submitted", task_id=search_id), 202
 
 

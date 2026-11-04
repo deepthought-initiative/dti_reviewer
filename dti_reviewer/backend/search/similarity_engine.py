@@ -4,9 +4,10 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-import pyarrow.parquet as pq
-from scipy import sparse
 from sklearn.metrics.pairwise import cosine_similarity
+
+from search.embedding_cache import EmbeddingCache
+from storage.paper_metadata import read_paper_metadata
 
 
 REVIEWER_PAPER_COUNT = 10000
@@ -32,41 +33,21 @@ class SimilarityEnginePapers:
         self.embeddings_dir = Path(os.environ["EMBEDDINGS_DIR"])
         self.vectorizer_path = Path(os.environ["VECTORIZER_PATH"])
         self.vectorizer = joblib.load(self.vectorizer_path)
+        self.embedding_cache = EmbeddingCache(
+            self.embeddings_dir,
+            int(os.environ.get("VECTOR_CACHE_MB", "0")) * 1024**2,
+        )
 
     def read_matched_paper_records(
         self, year, row_indices, on_records_read=None
     ):
-        year_path = self.ads_unified_dir / f"year={year}/data.parquet"
-        columns = ["title", "abstract", "author", "orcid_user", "aff"]
-        requested_rows = np.asarray(row_indices)
-        unique_rows = np.unique(requested_rows)
-        records = []
-        offset = 0
-        with pq.ParquetFile(year_path) as parquet:
-            for batch in parquet.iter_batches(
-                batch_size=8192, columns=columns, use_threads=False
-            ):
-                batch_end = offset + batch.num_rows
-                selected_rows = unique_rows[
-                    (unique_rows >= offset) & (unique_rows < batch_end)
-                ]
-                if len(selected_rows):
-                    selected = batch.take(selected_rows - offset).to_pandas()
-                    selected.index = selected_rows
-                    records.append(selected)
-                    if on_records_read is not None:
-                        on_records_read(len(selected_rows))
-                offset = batch_end
-            empty = parquet.schema_arrow.empty_table().to_pandas()
-        records = pd.concat(records) if records else empty
-        return records.loc[requested_rows, columns].reset_index(drop=True)
+        return read_paper_metadata(
+            os.environ["PAPER_METADATA_PATH"], self.ads_unified_dir,
+            self.embeddings_dir, year, row_indices, on_records_read,
+        )
 
     def load_year_embeddings(self, year):
-        year_dir = self.embeddings_dir / str(year)
-        return (
-            sparse.load_npz(year_dir / "tfidf_embeddings_refereed.npz"),
-            np.load(year_dir / "refereed_row_indices.npy"),
-        )
+        return self.embedding_cache.load(year)
 
     def vectorize(self, text):
         return self.vectorizer.transform([text])
@@ -82,7 +63,7 @@ class SimilarityEnginePapers:
         for idx in top_idx:
             similarity = float(sims[idx])
 
-            if similarity >= 0.98:
+            if similarity >= 0.92:
                 continue
 
             original_row_index = int(original_row_indices[idx])
@@ -93,6 +74,7 @@ class SimilarityEnginePapers:
     def attach_records(self, hits, objective, on_records_read=None):
         merged_hits = []
         hits = pd.DataFrame(hits, columns=["year", "row_index", "similarity"])
+        hits["paper_rank"] = hits["similarity"].rank(ascending=False)
         records = pd.DataFrame()
         if len(hits):
             records = pd.concat(
@@ -102,8 +84,9 @@ class SimilarityEnginePapers:
                 for year, group in hits.groupby("year")
             ).loc[hits.index]
 
-        for (_, df_row), year, similarity in zip(
-            records.iterrows(), hits["year"], hits["similarity"]
+        for (_, df_row), year, similarity, paper_rank in zip(
+            records.iterrows(), hits["year"], hits["similarity"],
+            hits["paper_rank"],
         ):
             authors = df_row["author"]
             if authors is None or len(authors) == 0:
@@ -127,12 +110,13 @@ class SimilarityEnginePapers:
                 {
                     "objective": objective,
                     "title": df_row["title"],
-                    "abstract": df_row["abstract"],
+                    "bibcode": df_row["bibcode"],
                     "author": df_row["author"],
                     "affiliation": df_row["aff"],
                     "orcid": orcid,
                     "year": year,
                     "similarity": similarity,
+                    "paper_rank": paper_rank,
                 }
             )
 
@@ -141,12 +125,13 @@ class SimilarityEnginePapers:
             columns=[
                 "objective",
                 "title",
-                "abstract",
+                "bibcode",
                 "author",
                 "affiliation",
                 "orcid",
                 "year",
                 "similarity",
+                "paper_rank",
             ],
         )
         read_in["author"] = read_in["author"].apply(truncate_list)
@@ -172,12 +157,13 @@ class SimilarityEnginePapers:
             [
                 "objective",
                 "title",
-                "abstract",
+                "bibcode",
                 "author",
                 "affiliation",
                 "orcid",
                 "year",
                 "similarity",
+                "paper_rank",
                 "block",
             ]
         ]
@@ -194,6 +180,7 @@ class SimilarityEnginePapers:
             papers = [
                 {
                     "title": row.title,
+                    "bibcode": row.bibcode,
                     "year": row.year,
                     "similarity": row.similarity,
                 }
@@ -211,13 +198,14 @@ class SimilarityEnginePapers:
                     "affiliation": group["affiliation"].iloc[0],
                     "block": group["block"].iloc[0],
                     "n_papers": len(group),
-                    "best_similarity": group["similarity"].max(),
-                    "total_similarity": group["similarity"].sum(),
+                    "top_similarity": group["similarity"].max(),
+                    "average_similarity": group["similarity"].mean(),
+                    "position_score": (1 / group["paper_rank"]).sum(),
                     "papers": papers,
                 }
             )
 
-        return (
+        ranked = (
             pd.DataFrame(
                 people,
                 columns=[
@@ -226,11 +214,22 @@ class SimilarityEnginePapers:
                     "affiliation",
                     "block",
                     "n_papers",
-                    "best_similarity",
-                    "total_similarity",
+                    "top_similarity",
+                    "average_similarity",
+                    "position_score",
                     "papers",
                 ],
             )
-            .sort_values("total_similarity", ascending=False)
+            .sort_values("average_similarity", ascending=False)
             .reset_index(drop=True)
         )
+        ranked["similarity_rank"] = ranked["average_similarity"].rank(
+            ascending=False
+        )
+        ranked["position_rank"] = ranked["position_score"].rank(
+            ascending=False
+        )
+        ranked["combined_rank"] = (
+            ranked["similarity_rank"] + ranked["position_rank"]
+        )
+        return ranked

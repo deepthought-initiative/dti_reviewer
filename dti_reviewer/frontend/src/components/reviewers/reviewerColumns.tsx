@@ -48,15 +48,15 @@ export const reviewerColumns: ColumnDef<Author>[] = [
   },
   {
     accessorKey: "affiliation", header: "Affiliation", size: 270, minSize: 160,
-    cell: ({ getValue }) => <span className="block truncate" title={getValue<string>()}>{getValue<string>() || "Not listed"}</span>,
+    cell: ({ getValue }) => <span className="block truncate" title={getValue<string>()}>{getValue<string>() || "-"}</span>,
   },
   {
     accessorKey: "orcid", header: "ORCID", size: 205, minSize: 180,
-    cell: ({ getValue }) => (
+    cell: ({ getValue }) => getValue<string>() ? (
       <a className="orcid-link" href={`https://orcid.org/${getValue<string>()}`} target="_blank" rel="noopener noreferrer">
         {getValue<string>()}<ArrowSquareOut size={12} aria-hidden="true" />
       </a>
-    ),
+    ) : <span>-</span>,
   },
   { accessorKey: "n_papers", header: "Papers", size: 85, minSize: 75, enableGlobalFilter: false },
   {

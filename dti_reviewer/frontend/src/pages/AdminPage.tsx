@@ -36,10 +36,15 @@ export default function AdminPage() {
         return () => { active = false }
     }, [allowed, navigate])
 
-    async function mutate(method: "POST" | "PATCH" | "DELETE", user?: User, form?: HTMLFormElement) {
+    async function mutate(method: "POST" | "PATCH" | "DELETE", user?: User, form?: HTMLFormElement, promote = false) {
         if (busy) return
         if (method === "DELETE" && !window.confirm(`Delete ${user?.username || user?.subject}? They will lose access immediately.`)) return
-        const data = form ? Object.fromEntries(new FormData(form)) : undefined
+        if (promote && !window.confirm(`Make ${user?.username || user?.subject} an admin? They will be able to manage users and grant admin access.`)) return
+        const fields = form ? new FormData(form) : undefined
+        const data = promote ? { is_admin: true } : fields ? {
+            ...Object.fromEntries(fields),
+            ...(method === "POST" ? { is_admin: fields.has("is_admin") } : {}),
+        } : undefined
         setBusy(true)
         setError("")
         setMessage("")
@@ -59,11 +64,11 @@ export default function AdminPage() {
                 throw new Error(data?.message || "Unable to save. Reload and try again.")
             }
             form?.reset()
-            if (method === "PATCH" && String(user?.id) === session.user_id) {
+            if (method === "PATCH" && !promote && String(user?.id) === session.user_id) {
                 navigate("/login", { replace: true, state: { passwordChanged: true } })
                 return
             }
-            setMessage(method === "POST" ? "User created." : method === "PATCH" ? "Password changed." : "User deleted.")
+            setMessage(promote ? "Admin access granted." : method === "POST" ? "User created." : method === "PATCH" ? "Password changed." : "User deleted.")
             setUsers(null)
             await fetch(endpoint)
                 .then(async (refreshed) => {
@@ -109,6 +114,7 @@ export default function AdminPage() {
                             <div><label htmlFor="new-username">Username</label><Input id="new-username" name="username" autoComplete="off" required /></div>
                             <div><label htmlFor="new-password">Password</label><Input id="new-password" name="password" type="password" autoComplete="new-password" required /></div>
                             <Button type="submit"><UserPlus size={16} aria-hidden="true" />Create user</Button>
+                            <label className="flex items-center gap-2"><input type="checkbox" name="is_admin" />Administrator</label>
                         </form>
                     </section>}
                     <section>
@@ -135,7 +141,10 @@ export default function AdminPage() {
                                                     {name}{String(user.id) === session.user_id && " (you)"}
                                                     {!user.is_local && <div className="text-xs text-muted-foreground break-all">{user.issuer}</div>}
                                                 </TableCell>
-                                                <TableCell>{user.is_admin ? "Admin" : "User"}</TableCell>
+                                                <TableCell>
+                                                    {user.is_admin ? "Admin" : "User"}
+                                                    {!user.is_admin && !user.is_blocked && <Button type="button" variant="outline" size="sm" className="ml-2" aria-label={`Make ${name} an admin`} onClick={() => void mutate("PATCH", user, undefined, true)}>Make admin</Button>}
+                                                </TableCell>
                                                 <TableCell>{deleted ? "Deleted" : user.is_blocked ? "Blocked" : "Active"}</TableCell>
                                                 <TableCell>
                                                     {user.is_local ? (

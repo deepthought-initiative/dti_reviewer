@@ -79,14 +79,17 @@ def update_user(user_id):
         if not isinstance(data, dict):
             return jsonify(message="Expected a JSON object"), 400
         if "is_admin" in data:
-            if set(data) != {"is_admin"} or data["is_admin"] is not True:
+            is_admin = data["is_admin"]
+            if set(data) != {"is_admin"} or type(is_admin) is not bool:
                 return jsonify(
-                    message="Provide only is_admin: true to grant admin access"
+                    message="Provide only a boolean is_admin"
                 ), 400
+            if not is_admin and user_id == current_user.id:
+                return jsonify(message="You cannot remove your own admin access"), 400
             with db:
                 result = db.execute(
-                    "UPDATE users SET is_admin = 1 WHERE id = ?",
-                    (user_id,),
+                    "UPDATE users SET is_admin = ? WHERE id = ?",
+                    (is_admin, user_id),
                 )
         elif "is_blocked" in data:
             blocked = data["is_blocked"]

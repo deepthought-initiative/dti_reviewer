@@ -7,8 +7,8 @@ This page contains auto-generated API reference documentation [#f1]_.
    :titlesonly:
 
    /autoapi/app/index
-   /autoapi/routes/index
    /autoapi/search/index
+   /autoapi/routes/index
    /autoapi/storage/index
    /autoapi/scripts/index
    /autoapi/celery_app/index

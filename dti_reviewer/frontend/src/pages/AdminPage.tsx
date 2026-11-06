@@ -36,12 +36,14 @@ export default function AdminPage() {
         return () => { active = false }
     }, [allowed, navigate])
 
-    async function mutate(method: "POST" | "PATCH" | "DELETE", user?: User, form?: HTMLFormElement, promote = false) {
+    async function mutate(method: "POST" | "PATCH" | "DELETE", user?: User, form?: HTMLFormElement, changeRole = false) {
         if (busy) return
         if (method === "DELETE" && !window.confirm(`Delete ${user?.username || user?.subject}? They will lose access immediately.`)) return
-        if (promote && !window.confirm(`Make ${user?.username || user?.subject} an admin? They will be able to manage users and grant admin access.`)) return
+        if (changeRole && !window.confirm(user?.is_admin
+            ? `Remove admin access from ${user.username || user.subject}? They will keep their account but will no longer be able to manage users.`
+            : `Make ${user?.username || user?.subject} an admin? They will be able to manage users and grant admin access.`)) return
         const fields = form ? new FormData(form) : undefined
-        const data = promote ? { is_admin: true } : fields ? {
+        const data = changeRole ? { is_admin: !user?.is_admin } : fields ? {
             ...Object.fromEntries(fields),
             ...(method === "POST" ? { is_admin: fields.has("is_admin") } : {}),
         } : undefined
@@ -64,11 +66,11 @@ export default function AdminPage() {
                 throw new Error(data?.message || "Unable to save. Reload and try again.")
             }
             form?.reset()
-            if (method === "PATCH" && !promote && String(user?.id) === session.user_id) {
+            if (method === "PATCH" && !changeRole && String(user?.id) === session.user_id) {
                 navigate("/login", { replace: true, state: { passwordChanged: true } })
                 return
             }
-            setMessage(promote ? "Admin access granted." : method === "POST" ? "User created." : method === "PATCH" ? "Password changed." : "User deleted.")
+            setMessage(changeRole ? (user?.is_admin ? "Admin access removed." : "Admin access granted.") : method === "POST" ? "User created." : method === "PATCH" ? "Password changed." : "User deleted.")
             setUsers(null)
             await fetch(endpoint)
                 .then(async (refreshed) => {
@@ -143,7 +145,11 @@ export default function AdminPage() {
                                                 </TableCell>
                                                 <TableCell>
                                                     {user.is_admin ? "Admin" : "User"}
-                                                    {!user.is_admin && !user.is_blocked && <Button type="button" variant="outline" size="sm" className="ml-2" aria-label={`Make ${name} an admin`} onClick={() => void mutate("PATCH", user, undefined, true)}>Make admin</Button>}
+                                                    {String(user.id) !== session.user_id && (user.is_admin || !user.is_blocked) ? (
+                                                        <Button type="button" variant="outline" size="sm" className="ml-2" aria-label={user.is_admin ? `Remove admin access from ${name}` : `Make ${name} an admin`} onClick={() => void mutate("PATCH", user, undefined, true)}>
+                                                            {user.is_admin ? "Remove admin" : "Make admin"}
+                                                        </Button>
+                                                    ) : null}
                                                 </TableCell>
                                                 <TableCell>{deleted ? "Deleted" : user.is_blocked ? "Blocked" : "Active"}</TableCell>
                                                 <TableCell>

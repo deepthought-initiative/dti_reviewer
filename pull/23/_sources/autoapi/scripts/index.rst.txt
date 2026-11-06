@@ -1,0 +1,15 @@
+scripts
+=======
+
+.. py:module:: scripts
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/scripts/initialize_paper_metadata/index
+
+

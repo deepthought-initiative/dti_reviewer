@@ -1,0 +1,17 @@
+routes.account
+==============
+
+.. py:module:: routes.account
+
+
+
+
+
+
+Module Contents
+---------------
+
+.. py:data:: account_bp
+
+.. py:function:: change_password()
+

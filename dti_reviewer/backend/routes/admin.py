@@ -104,9 +104,15 @@ def update_user(user_id):
                     (blocked, token_hex(32), user_id),
                 )
         else:
+            if user_id == current_user.id:
+                return jsonify(
+                    message="Change your own password from Account"
+                ), 400
             password = data.get("password")
             if not isinstance(password, str) or not password:
                 return jsonify(message="Password is required"), 400
+            if data.get("confirm_password") != password:
+                return jsonify(message="New passwords do not match"), 400
             with db:
                 result = db.execute(
                     "UPDATE users SET password_hash = ?, session_id = ? "

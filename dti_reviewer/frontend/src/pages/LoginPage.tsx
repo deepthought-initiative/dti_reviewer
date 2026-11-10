@@ -53,6 +53,43 @@ export default function LoginPage() {
         }
     }
 
+    async function changePassword(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        if (!session || busy) return
+        const form = event.currentTarget
+        const data = Object.fromEntries(new FormData(form))
+        setError("")
+        if (data.new_password !== data.confirm_password) {
+            setError("New passwords do not match")
+            return
+        }
+        setBusy(true)
+        try {
+            const response = await fetch(`${import.meta.env.BASE_URL}auth/password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": session.csrf_token },
+                body: JSON.stringify(data),
+            })
+            if (response.status === 401) {
+                await refreshSession()
+                throw new Error("Your session expired. Please log in again.")
+            }
+            if (!response.ok) {
+                const result = response.headers.get("content-type")?.includes("application/json")
+                    ? await response.json() : null
+                throw new Error(result?.message || "Unable to change password. Reload and try again.")
+            }
+            form.reset()
+            setSession(null)
+            navigate("/login", { replace: true, state: { passwordChanged: true } })
+            await refreshSession()
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Unable to connect. Please try again.")
+        } finally {
+            setBusy(false)
+        }
+    }
+
     return (
         <>
         <Navbar isAdmin={Boolean(session?.user_id && session.is_admin)} />
@@ -64,6 +101,7 @@ export default function LoginPage() {
             {!session ? (
                 !error && <p role="status">Loading…</p>
             ) : session.user_id ? (
+                <>
                 <form onSubmit={submit} className="space-y-6">
                     <p>You are signed in.</p>
                     <div className="flex flex-wrap gap-2">
@@ -74,6 +112,28 @@ export default function LoginPage() {
                         <Button disabled={busy} type="submit" variant="outline"><SignOut size={16} aria-hidden="true" />Log out</Button>
                     </div>
                 </form>
+                {session.auth_mode === "local" ? (
+                    <form onSubmit={changePassword} className="space-y-4 mt-8">
+                        <h2 className="font-semibold">Change password</h2>
+                        <p>Changing your password signs you out on all devices.</p>
+                        <fieldset disabled={busy} className="space-y-4">
+                            <div>
+                                <label htmlFor="current-password">Current password</label>
+                                <Input id="current-password" name="current_password" type="password" autoComplete="current-password" required />
+                            </div>
+                            <div>
+                                <label htmlFor="new-password">New password</label>
+                                <Input id="new-password" name="new_password" type="password" autoComplete="new-password" required />
+                            </div>
+                            <div>
+                                <label htmlFor="confirm-password">Confirm new password</label>
+                                <Input id="confirm-password" name="confirm_password" type="password" autoComplete="new-password" required />
+                            </div>
+                            <Button type="submit">{busy ? "Saving…" : "Change password"}</Button>
+                        </fieldset>
+                    </form>
+                ) : <p className="mt-8">Manage your password with your identity provider.</p>}
+                </>
             ) : session.auth_mode === "oidc" ? (
                 <Button asChild><a href={`${import.meta.env.BASE_URL}auth/login`}>Continue with your identity provider</a></Button>
             ) : (

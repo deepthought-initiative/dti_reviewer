@@ -3,7 +3,8 @@ import { Link, useNavigate, useOutletContext } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, FloppyDisk, Trash, UserPlus } from "@phosphor-icons/react"
+import { ArrowLeft, Trash, UserPlus } from "@phosphor-icons/react"
+import ResetPasswordDialog from "@/components/ResetPasswordDialog"
 import type { Session } from "./LoginPage"
 
 type User = { id: number; username: string | null; issuer: string | null; subject: string | null; is_admin: number; is_blocked: number; is_local: number }
@@ -66,18 +67,14 @@ export default function AdminPage() {
                 throw new Error(data?.message || "Unable to save. Reload and try again.")
             }
             form?.reset()
-            if (method === "PATCH" && !changeRole && String(user?.id) === session.user_id) {
-                navigate("/login", { replace: true, state: { passwordChanged: true } })
-                return
-            }
             setMessage(changeRole ? (user?.is_admin ? "Admin access removed." : "Admin access granted.") : method === "POST" ? "User created." : method === "PATCH" ? "Password changed." : "User deleted.")
-            setUsers(null)
             await fetch(endpoint)
                 .then(async (refreshed) => {
                     if (!refreshed.ok) throw new Error("Refresh failed")
                     setUsers((await refreshed.json()).users)
                 })
                 .catch(() => setError("Change saved, but the user list could not refresh. Reload the page."))
+            return true
         } catch (err) {
             setError(err instanceof Error ? err.message : "Unable to connect. Try again.")
         } finally {
@@ -85,9 +82,9 @@ export default function AdminPage() {
         }
     }
 
-    function submit(event: FormEvent<HTMLFormElement>, user?: User) {
+    function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        void mutate(user ? "PATCH" : "POST", user, event.currentTarget)
+        void mutate("POST", undefined, event.currentTarget)
     }
 
     if (!allowed) return (
@@ -153,12 +150,10 @@ export default function AdminPage() {
                                                 </TableCell>
                                                 <TableCell>{deleted ? "Deleted" : user.is_blocked ? "Blocked" : "Active"}</TableCell>
                                                 <TableCell>
-                                                    {user.is_local ? (
-                                                        <form onSubmit={(event) => submit(event, user)} className="flex items-center gap-2">
-                                                            <label className="sr-only" htmlFor={`password-${user.id}`}>New password for {name}</label>
-                                                            <Input id={`password-${user.id}`} name="password" type="password" autoComplete="new-password" className="w-40" required />
-                                                            <Button type="submit" variant="outline" size="sm" aria-label={`Change password for ${name}`}><FloppyDisk size={16} aria-hidden="true" />Save</Button>
-                                                        </form>
+                                                    {user.is_local && String(user.id) === session.user_id ? (
+                                                        <Link to="/login" className="underline">Change password in Account</Link>
+                                                    ) : user.is_local ? (
+                                                        <ResetPasswordDialog userId={user.id} name={name || "user"} busy={busy} error={error} onOpen={() => setError("")} onReset={(form) => mutate("PATCH", user, form)} />
                                                     ) : deleted ? "" : "Managed externally"}
                                                 </TableCell>
                                                 <TableCell className="text-right">

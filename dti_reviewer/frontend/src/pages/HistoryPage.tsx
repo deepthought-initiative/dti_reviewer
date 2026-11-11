@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
-import { Button } from "../ui/button"
-import "../../reviewer.css"
+import { Button } from "../components/ui/button"
+import "../reviewer.css"
 
 type Entry = { id: string; title: string; objective: string; created_at: string; state: string }
 type History = { searches: Entry[]; next_cursor: string | null }

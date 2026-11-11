@@ -89,4 +89,14 @@ def init_db(app):
             );
             CREATE INDEX IF NOT EXISTS searches_user_created
                 ON searches(user_id, (created_at || id) DESC);
+            CREATE TABLE IF NOT EXISTS panel_presets (
+                id INTEGER PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                name TEXT NOT NULL,
+                keywords TEXT NOT NULL,
+                source_field TEXT,
+                created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+                updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+                UNIQUE (user_id, name)
+            );
         """)

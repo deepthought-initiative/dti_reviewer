@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 
 interface Paper {
   title: string
+  bibcode: string | null
   year: number
   similarity: number
 }
@@ -14,12 +15,18 @@ export interface Author {
   affiliation: string
   block: string
   n_papers: number
-  best_similarity: number
-  total_similarity: number
+  top_similarity: number
+  average_similarity: number
+  position_score: number
+  similarity_rank: number
+  position_rank: number
+  combined_rank: number
   papers: Paper[]
 }
 
 export interface SearchResults {
+  year_start: number
+  year_end: number
   counts: { papers: number; author_rows: number; with_orcid: number; people: number }
   authors: Author[]
 }
@@ -41,23 +48,23 @@ export const reviewerColumns: ColumnDef<Author>[] = [
   },
   {
     accessorKey: "affiliation", header: "Affiliation", size: 270, minSize: 160,
-    cell: ({ getValue }) => <span className="block truncate" title={getValue<string>()}>{getValue<string>() || "Not listed"}</span>,
+    cell: ({ getValue }) => <span className="block truncate" title={getValue<string>()}>{getValue<string>() || "-"}</span>,
   },
   {
     accessorKey: "orcid", header: "ORCID", size: 205, minSize: 180,
-    cell: ({ getValue }) => (
+    cell: ({ getValue }) => getValue<string>() ? (
       <a className="orcid-link" href={`https://orcid.org/${getValue<string>()}`} target="_blank" rel="noopener noreferrer">
         {getValue<string>()}<ArrowSquareOut size={12} aria-hidden="true" />
       </a>
-    ),
+    ) : <span>-</span>,
   },
   { accessorKey: "n_papers", header: "Papers", size: 85, minSize: 75, enableGlobalFilter: false },
   {
-    accessorKey: "best_similarity", header: "Best similarity", size: 130, minSize: 125, enableGlobalFilter: false,
+    accessorKey: "top_similarity", header: "Top similarity", size: 130, minSize: 125, enableGlobalFilter: false,
     cell: ({ getValue }) => <span className="score-value">{getValue<number>().toFixed(3)}</span>,
   },
   {
-    accessorKey: "total_similarity", header: "Total similarity", size: 140, minSize: 130, enableGlobalFilter: false,
+    accessorKey: "average_similarity", header: "Average similarity", size: 160, minSize: 155, enableGlobalFilter: false,
     cell: ({ getValue }) => <span className="total-score">{getValue<number>().toFixed(3)}</span>,
   },
 ]

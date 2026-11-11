@@ -14,8 +14,8 @@ from flask_login import (
 from flask_wtf.csrf import generate_csrf
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from admin import admin_bp
-from db import get_db
+from routes.admin import admin_bp
+from storage.db import get_db
 
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")

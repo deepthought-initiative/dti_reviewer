@@ -12,7 +12,8 @@ export function AuthorPapers({ author, id }: { author: Author; id: string }) {
         {author.papers.map((paper, index) => (
           <li key={index}>
             <span className="paper-year">{paper.year}</span>
-            <span>{paper.title}</span>
+            {paper.bibcode ? <a className="orcid-link" href={`https://scixplorer.org/abs/${encodeURIComponent(paper.bibcode)}/abstract`}
+              target="_blank" rel="noopener noreferrer">{paper.title}</a> : <span>{paper.title}</span>}
             <span className="paper-score" title="Paper similarity">{paper.similarity.toFixed(3)}</span>
           </li>
         ))}

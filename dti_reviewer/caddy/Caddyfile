@@ -1,0 +1,11 @@
+{
+	email atharva.arya@sorobanlabs.io
+	default_sni 136.116.220.46
+	cert_issuer acme {
+		profile shortlived
+	}
+}
+
+136.116.220.46 {
+	reverse_proxy frontend:80
+}

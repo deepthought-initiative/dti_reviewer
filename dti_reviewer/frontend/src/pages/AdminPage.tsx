@@ -3,7 +3,8 @@ import { Link, useNavigate, useOutletContext } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, FloppyDisk, Trash, UserPlus } from "@phosphor-icons/react"
+import { ArrowLeft, Trash, UserPlus } from "@phosphor-icons/react"
+import ResetPasswordDialog from "@/components/ResetPasswordDialog"
 import type { Session } from "./LoginPage"
 
 type User = { id: number; username: string | null; issuer: string | null; subject: string | null; is_admin: number; is_blocked: number; is_local: number }
@@ -36,10 +37,17 @@ export default function AdminPage() {
         return () => { active = false }
     }, [allowed, navigate])
 
-    async function mutate(method: "POST" | "PATCH" | "DELETE", user?: User, form?: HTMLFormElement) {
+    async function mutate(method: "POST" | "PATCH" | "DELETE", user?: User, form?: HTMLFormElement, changeRole = false) {
         if (busy) return
         if (method === "DELETE" && !window.confirm(`Delete ${user?.username || user?.subject}? They will lose access immediately.`)) return
-        const data = form ? Object.fromEntries(new FormData(form)) : undefined
+        if (changeRole && !window.confirm(user?.is_admin
+            ? `Remove admin access from ${user.username || user.subject}? They will keep their account but will no longer be able to manage users.`
+            : `Make ${user?.username || user?.subject} an admin? They will be able to manage users and grant admin access.`)) return
+        const fields = form ? new FormData(form) : undefined
+        const data = changeRole ? { is_admin: !user?.is_admin } : fields ? {
+            ...Object.fromEntries(fields),
+            ...(method === "POST" ? { is_admin: fields.has("is_admin") } : {}),
+        } : undefined
         setBusy(true)
         setError("")
         setMessage("")
@@ -59,18 +67,14 @@ export default function AdminPage() {
                 throw new Error(data?.message || "Unable to save. Reload and try again.")
             }
             form?.reset()
-            if (method === "PATCH" && String(user?.id) === session.user_id) {
-                navigate("/login", { replace: true, state: { passwordChanged: true } })
-                return
-            }
-            setMessage(method === "POST" ? "User created." : method === "PATCH" ? "Password changed." : "User deleted.")
-            setUsers(null)
+            setMessage(changeRole ? (user?.is_admin ? "Admin access removed." : "Admin access granted.") : method === "POST" ? "User created." : method === "PATCH" ? "Password changed." : "User deleted.")
             await fetch(endpoint)
                 .then(async (refreshed) => {
                     if (!refreshed.ok) throw new Error("Refresh failed")
                     setUsers((await refreshed.json()).users)
                 })
                 .catch(() => setError("Change saved, but the user list could not refresh. Reload the page."))
+            return true
         } catch (err) {
             setError(err instanceof Error ? err.message : "Unable to connect. Try again.")
         } finally {
@@ -78,9 +82,9 @@ export default function AdminPage() {
         }
     }
 
-    function submit(event: FormEvent<HTMLFormElement>, user?: User) {
+    function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        void mutate(user ? "PATCH" : "POST", user, event.currentTarget)
+        void mutate("POST", undefined, event.currentTarget)
     }
 
     if (!allowed) return (
@@ -109,6 +113,7 @@ export default function AdminPage() {
                             <div><label htmlFor="new-username">Username</label><Input id="new-username" name="username" autoComplete="off" required /></div>
                             <div><label htmlFor="new-password">Password</label><Input id="new-password" name="password" type="password" autoComplete="new-password" required /></div>
                             <Button type="submit"><UserPlus size={16} aria-hidden="true" />Create user</Button>
+                            <label className="flex items-center gap-2"><input type="checkbox" name="is_admin" />Administrator</label>
                         </form>
                     </section>}
                     <section>
@@ -135,15 +140,20 @@ export default function AdminPage() {
                                                     {name}{String(user.id) === session.user_id && " (you)"}
                                                     {!user.is_local && <div className="text-xs text-muted-foreground break-all">{user.issuer}</div>}
                                                 </TableCell>
-                                                <TableCell>{user.is_admin ? "Admin" : "User"}</TableCell>
+                                                <TableCell>
+                                                    {user.is_admin ? "Admin" : "User"}
+                                                    {String(user.id) !== session.user_id && (user.is_admin || !user.is_blocked) ? (
+                                                        <Button type="button" variant="outline" size="sm" className="ml-2" aria-label={user.is_admin ? `Remove admin access from ${name}` : `Make ${name} an admin`} onClick={() => void mutate("PATCH", user, undefined, true)}>
+                                                            {user.is_admin ? "Remove admin" : "Make admin"}
+                                                        </Button>
+                                                    ) : null}
+                                                </TableCell>
                                                 <TableCell>{deleted ? "Deleted" : user.is_blocked ? "Blocked" : "Active"}</TableCell>
                                                 <TableCell>
-                                                    {user.is_local ? (
-                                                        <form onSubmit={(event) => submit(event, user)} className="flex items-center gap-2">
-                                                            <label className="sr-only" htmlFor={`password-${user.id}`}>New password for {name}</label>
-                                                            <Input id={`password-${user.id}`} name="password" type="password" autoComplete="new-password" className="w-40" required />
-                                                            <Button type="submit" variant="outline" size="sm" aria-label={`Change password for ${name}`}><FloppyDisk size={16} aria-hidden="true" />Save</Button>
-                                                        </form>
+                                                    {user.is_local && String(user.id) === session.user_id ? (
+                                                        <Link to="/login" className="underline">Change password in Account</Link>
+                                                    ) : user.is_local ? (
+                                                        <ResetPasswordDialog userId={user.id} name={name || "user"} busy={busy} error={error} onOpen={() => setError("")} onReset={(form) => mutate("PATCH", user, form)} />
                                                     ) : deleted ? "" : "Managed externally"}
                                                 </TableCell>
                                                 <TableCell className="text-right">

@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from "react"
-import { ArrowDown, ArrowUp, ArrowsDownUp, CaretLeft, CaretRight, MagnifyingGlass, Info, X } from "@phosphor-icons/react"
+import { ArrowDown, ArrowUp, ArrowsDownUp, CaretLeft, CaretRight, CheckSquare, Square, MagnifyingGlass, Info, X } from "@phosphor-icons/react"
 import {
   flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel,
   getSortedRowModel, useReactTable, type ColumnDef, type SortingState,
@@ -19,6 +19,10 @@ export type { SearchResults } from "./reviewerColumns"
 export function ResultTable({ results }: { results: SearchResults }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "average_similarity", desc: true }])
   const [filter, setFilter] = useState("")
+  const [hideWithoutOrcid, setHideWithoutOrcid] = useState(false)
+  const columnFilters = useMemo(() => (
+    hideWithoutOrcid ? [{ id: "orcid", value: true }] : []
+  ), [hideWithoutOrcid])
   const [k, setK] = useState(3)
   const topKSelected = sorting[0]?.id === "top_k_similarity"
   const combinedSelected = sorting[0]?.id === "combined_rank"
@@ -38,7 +42,8 @@ export function ResultTable({ results }: { results: SearchResults }) {
     sortDescFirst: false,
     sortingFn: (a, b) => a.original.combined_rank - b.original.combined_rank
       || b.original.average_similarity - a.original.average_similarity
-      || a.original.orcid.localeCompare(b.original.orcid),
+      || a.original.orcid.localeCompare(b.original.orcid)
+      || a.original.author.localeCompare(b.original.author),
     cell: ({ row }) => <Tooltip>
       <TooltipTrigger asChild><span tabIndex={0} className="total-score">{row.original.combined_rank}</span></TooltipTrigger>
       <TooltipContent>Similarity rank {row.original.similarity_rank} + position rank {row.original.position_rank}</TooltipContent>
@@ -47,7 +52,8 @@ export function ResultTable({ results }: { results: SearchResults }) {
   const table = useReactTable({
     data: authors,
     columns,
-    state: { sorting, globalFilter: filter, columnVisibility: {
+    state: { sorting, globalFilter: filter,
+      columnFilters, columnVisibility: {
       top_k_similarity: topKSelected, combined_rank: combinedSelected,
     } },
     onSortingChange: setSorting,
@@ -57,7 +63,6 @@ export function ResultTable({ results }: { results: SearchResults }) {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getRowId: (author) => author.orcid,
     getRowCanExpand: () => true,
     columnResizeMode: "onChange",
     enableSortingRemoval: false,
@@ -71,10 +76,10 @@ export function ResultTable({ results }: { results: SearchResults }) {
   return (
     <div className="reviewer-results">
       <div className="results-summary">
-        <div><h2>Suggested reviewers <span>{results.counts.people.toLocaleString()}</span></h2>
+        <div><h2>Suggested reviewers <span>{count.toLocaleString()}</span></h2>
           <p>From {results.counts.papers.toLocaleString()} matched papers ({results.year_start} to {results.year_end}) <Tooltip>
             <TooltipTrigger asChild><button type="button" aria-label="About similarity"><Info aria-hidden="true" /></button></TooltipTrigger>
-            <TooltipContent className="max-w-xs">Similarity measures shared vocabulary between your search text and a paper using TF-IDF cosine similarity, from 0 to 1. Higher scores mean closer text matches, not a probability of expertise. Top similarity is the highest paper score; average similarity is the mean of all matched papers. Papers scoring 0.92 or higher are excluded as possible copies or close variations.</TooltipContent>
+            <TooltipContent className="max-w-xs">Similarity measures shared vocabulary between your search text and a paper using TF-IDF cosine similarity, from 0 to 1. Higher scores mean closer text matches, not a probability of expertise. Top similarity is the highest paper score; average similarity is the mean of all matched papers. Papers scoring 0.92 or higher are excluded as possible copies or close variations. All listed authors are considered. Authors without ORCIDs are grouped by name, ignoring case and extra spaces. Different people with the same name may be combined, while name variants may appear separately.</TooltipContent>
           </Tooltip></p></div>
         <details className="search-counts"><summary>Search breakdown</summary>
           <dl><div><dt>Author entries</dt><dd>{results.counts.author_rows.toLocaleString()}</dd></div>
@@ -88,6 +93,16 @@ export function ResultTable({ results }: { results: SearchResults }) {
             value={filter} onChange={(event) => setFilter(event.target.value)} />
           {filter && <Button variant="ghost" size="icon" aria-label="Clear filter" onClick={() => setFilter("")}><X /></Button>}
         </div>
+        <label className="orcid-filter">
+          <input className="sr-only" type="checkbox" checked={hideWithoutOrcid} onChange={(event) => {
+            setHideWithoutOrcid(event.target.checked)
+            table.setPageIndex(0)
+          }} />
+          {hideWithoutOrcid
+            ? <CheckSquare size={20} weight="fill" aria-hidden="true" />
+            : <Square size={20} aria-hidden="true" />}
+          Hide reviewers without ORCID
+        </label>
         <ReviewerSort sortId={sorting[0]?.id ?? ""} k={k}
           label={String(table.getColumn(sorting[0]?.id)?.columnDef.header ?? "Sort reviewers")}
           onSort={(id) => { setSorting([{ id, desc: id !== "combined_rank" }]); table.setPageIndex(0) }}
@@ -136,7 +151,11 @@ export function ResultTable({ results }: { results: SearchResults }) {
               </Fragment>
             ))}
             {count === 0 && <TableRow><TableCell colSpan={table.getVisibleLeafColumns().length}>
-              <div className="empty-filter">No reviewers match this filter.<Button variant="link" onClick={() => setFilter("")}>Clear filter</Button></div>
+              <div className="empty-filter">No reviewers match these filters.<Button variant="link" onClick={() => {
+                setFilter("")
+                setHideWithoutOrcid(false)
+                table.setPageIndex(0)
+              }}>Clear filters</Button></div>
             </TableCell></TableRow>}
           </TableBody>
         </Table>

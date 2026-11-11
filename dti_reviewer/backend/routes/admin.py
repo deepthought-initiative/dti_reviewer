@@ -44,18 +44,22 @@ def users():
 
     username = data.get("username")
     password = data.get("password")
+    is_admin = data.get("is_admin", False)
 
     if not isinstance(username, str) or not username.strip():
         return jsonify(message="Username is required"), 400
     if not isinstance(password, str) or not password:
         return jsonify(message="Password is required"), 400
+    if type(is_admin) is not bool:
+        return jsonify(message="is_admin must be a boolean"), 400
 
     try:
         with db:
             result = db.execute(
-                "INSERT INTO users (username, password_hash, session_id) "
-                "VALUES (?, ?, ?)",
-                (username.strip(), generate_password_hash(password), token_hex(32)),
+                "INSERT INTO users (username, password_hash, session_id, is_admin) "
+                "VALUES (?, ?, ?, ?)",
+                (username.strip(), generate_password_hash(password),
+                 token_hex(32), is_admin),
             )
     except sqlite3.IntegrityError:
         return jsonify(message="Username already exists"), 409
@@ -74,7 +78,20 @@ def update_user(user_id):
         data = request.get_json()
         if not isinstance(data, dict):
             return jsonify(message="Expected a JSON object"), 400
-        if "is_blocked" in data:
+        if "is_admin" in data:
+            is_admin = data["is_admin"]
+            if set(data) != {"is_admin"} or type(is_admin) is not bool:
+                return jsonify(
+                    message="Provide only a boolean is_admin"
+                ), 400
+            if not is_admin and user_id == current_user.id:
+                return jsonify(message="You cannot remove your own admin access"), 400
+            with db:
+                result = db.execute(
+                    "UPDATE users SET is_admin = ? WHERE id = ?",
+                    (is_admin, user_id),
+                )
+        elif "is_blocked" in data:
             blocked = data["is_blocked"]
             if type(blocked) is not bool or "password" in data:
                 return jsonify(message="Provide only a boolean is_blocked"), 400
@@ -87,9 +104,15 @@ def update_user(user_id):
                     (blocked, token_hex(32), user_id),
                 )
         else:
+            if user_id == current_user.id:
+                return jsonify(
+                    message="Change your own password from Account"
+                ), 400
             password = data.get("password")
             if not isinstance(password, str) or not password:
                 return jsonify(message="Password is required"), 400
+            if data.get("confirm_password") != password:
+                return jsonify(message="New passwords do not match"), 400
             with db:
                 result = db.execute(
                     "UPDATE users SET password_hash = ?, session_id = ? "

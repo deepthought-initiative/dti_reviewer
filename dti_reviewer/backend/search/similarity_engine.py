@@ -13,8 +13,11 @@ from storage.paper_metadata import read_paper_metadata
 REVIEWER_PAPER_COUNT = 10000
 
 
-def truncate_list(input_list, truncation_level=2):
-    return input_list[:truncation_level]
+def aligned_author_values(values, author_count):
+    # A mismatched array cannot safely identify which author owns each value.
+    if values is None or len(values) != author_count:
+        return [""] * author_count
+    return [value.strip() if value and value.strip() != "-" else "" for value in values]
 
 
 def blockize(author):
@@ -84,26 +87,12 @@ class SimilarityEnginePapers:
                 for year, group in hits.groupby("year")
             ).loc[hits.index]
 
-        for (_, df_row), year, similarity, paper_rank in zip(
-            records.iterrows(), hits["year"], hits["similarity"],
+        for (_, df_row), year, row_index, similarity, paper_rank in zip(
+            records.iterrows(), hits["year"], hits["row_index"], hits["similarity"],
             hits["paper_rank"],
         ):
             authors = df_row["author"]
             if authors is None or len(authors) == 0:
-                continue
-
-            aff = (
-                df_row["aff"]
-                if df_row["aff"] is not None
-                else ["-"] * len(authors)
-            )
-            orcid = (
-                df_row.get("orcid_user")
-                if df_row.get("orcid_user") is not None
-                else ["-"] * len(authors)
-            )
-
-            if len(aff) != len(authors) or len(orcid) != len(authors):
                 continue
 
             merged_hits.append(
@@ -112,11 +101,12 @@ class SimilarityEnginePapers:
                     "title": df_row["title"],
                     "bibcode": df_row["bibcode"],
                     "author": df_row["author"],
-                    "affiliation": df_row["aff"],
-                    "orcid": orcid,
+                    "affiliation": aligned_author_values(df_row["aff"], len(authors)),
+                    "orcid": aligned_author_values(df_row["orcid_user"], len(authors)),
                     "year": year,
                     "similarity": similarity,
                     "paper_rank": paper_rank,
+                    "paper_key": (year, row_index),
                 }
             )
 
@@ -132,51 +122,35 @@ class SimilarityEnginePapers:
                 "year",
                 "similarity",
                 "paper_rank",
+                "paper_key",
             ],
         )
-        read_in["author"] = read_in["author"].apply(truncate_list)
-        read_in["affiliation"] = read_in["affiliation"].apply(truncate_list)
-        read_in["orcid"] = read_in["orcid"].apply(truncate_list)
         read_in["author"] = read_in["author"].apply(list)
 
         cols = ["author", "orcid", "affiliation"]
         read_in = read_in.explode(cols, ignore_index=True)
         read_in["title"] = read_in["title"].str[0]
-        read_in["affiliation"] = read_in["affiliation"].apply(
-            lambda x: x[0] if isinstance(x, list) else x
+        read_in["author"] = read_in["author"].fillna("").str.strip()
+        names = read_in["author"].str.replace(r"\s+", " ", regex=True).str.casefold()
+        # shortcut: names can merge people; use author IDs when available.
+        read_in["reviewer_key"] = ("name:" + names).where(
+            read_in["orcid"].eq(""), "orcid:" + read_in["orcid"],
         )
-
-        paper_count = len(merged_hits)
-        author_row_count = len(read_in)
-        read_in = (
-            read_in.loc[read_in["orcid"].str.strip().ne("-")]
-            .reset_index(drop=True)
-        )
+        unnamed = read_in["author"].eq("") & read_in["orcid"].eq("")
+        read_in.loc[unnamed, "reviewer_key"] = "entry:" + read_in.index[unnamed].astype(str)
+        read_in["author"] = read_in["author"].replace("", "Not listed")
         read_in["block"] = read_in["author"].apply(blockize)
-        read_in = read_in[
-            [
-                "objective",
-                "title",
-                "bibcode",
-                "author",
-                "affiliation",
-                "orcid",
-                "year",
-                "similarity",
-                "paper_rank",
-                "block",
-            ]
-        ]
         read_in.attrs = {
-            "papers": paper_count,
-            "author_rows": author_row_count,
+            "papers": len(merged_hits),
+            "author_rows": len(read_in),
         }
         return read_in
 
     def rollup(self, rows):
         people = []
 
-        for orcid, group in rows.groupby("orcid", sort=False):
+        unique_papers = rows.drop_duplicates(["reviewer_key", "paper_key"])
+        for _, group in unique_papers.groupby("reviewer_key", sort=False):
             papers = [
                 {
                     "title": row.title,
@@ -194,7 +168,7 @@ class SimilarityEnginePapers:
             people.append(
                 {
                     "author": group["author"].iloc[0],
-                    "orcid": orcid,
+                    "orcid": group["orcid"].iloc[0],
                     "affiliation": group["affiliation"].iloc[0],
                     "block": group["block"].iloc[0],
                     "n_papers": len(group),

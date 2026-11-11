@@ -15,11 +15,13 @@ from flask_wtf.csrf import generate_csrf
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from routes.admin import admin_bp
+from routes.account import account_bp
 from storage.db import get_db
 
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 auth_bp.register_blueprint(admin_bp)
+auth_bp.register_blueprint(account_bp)
 login_manager = LoginManager()
 oauth = OAuth()
 

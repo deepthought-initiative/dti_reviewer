@@ -1,0 +1,71 @@
+import { CaretDown, CaretRight, ArrowSquareOut } from "@phosphor-icons/react"
+import type { ColumnDef } from "@tanstack/react-table"
+import { Button } from "@/components/ui/button"
+
+interface Paper {
+  title: string
+  bibcode: string | null
+  year: number
+  similarity: number
+}
+
+export interface Author {
+  author: string
+  orcid: string
+  affiliation: string
+  block: string
+  n_papers: number
+  top_similarity: number
+  average_similarity: number
+  position_score: number
+  similarity_rank: number
+  position_rank: number
+  combined_rank: number
+  papers: Paper[]
+}
+
+export interface SearchResults {
+  year_start: number
+  year_end: number
+  counts: { papers: number; author_rows: number; with_orcid: number; people: number }
+  authors: Author[]
+}
+
+export const reviewerColumns: ColumnDef<Author>[] = [
+  {
+    accessorKey: "author", header: "Author", size: 220, minSize: 160,
+    cell: ({ row }) => (
+      <div className="author-cell">
+        <Button variant="ghost" size="icon" className="expand-author"
+          aria-label={`${row.getIsExpanded() ? "Hide" : "Show"} papers for ${row.original.author}`}
+          aria-expanded={row.getIsExpanded()} aria-controls={`papers-${row.id}`}
+          onClick={row.getToggleExpandedHandler()}>
+          {row.getIsExpanded() ? <CaretDown /> : <CaretRight />}
+        </Button>
+        <span className="truncate font-medium" title={row.original.author}>{row.original.author}</span>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "affiliation", header: "Affiliation", size: 270, minSize: 160,
+    cell: ({ getValue }) => <span className="block truncate" title={getValue<string>()}>{getValue<string>() || "-"}</span>,
+  },
+  {
+    accessorKey: "orcid", header: "ORCID", size: 205, minSize: 180,
+    filterFn: (row) => Boolean(row.original.orcid.trim()),
+    cell: ({ getValue }) => getValue<string>() ? (
+      <a className="orcid-link" href={`https://orcid.org/${getValue<string>()}`} target="_blank" rel="noopener noreferrer">
+        {getValue<string>()}<ArrowSquareOut size={12} aria-hidden="true" />
+      </a>
+    ) : <span>-</span>,
+  },
+  { accessorKey: "n_papers", header: "Papers", size: 85, minSize: 75, enableGlobalFilter: false },
+  {
+    accessorKey: "top_similarity", header: "Top similarity", size: 130, minSize: 125, enableGlobalFilter: false,
+    cell: ({ getValue }) => <span className="score-value">{getValue<number>().toFixed(3)}</span>,
+  },
+  {
+    accessorKey: "average_similarity", header: "Average similarity", size: 160, minSize: 155, enableGlobalFilter: false,
+    cell: ({ getValue }) => <span className="total-score">{getValue<number>().toFixed(3)}</span>,
+  },
+]

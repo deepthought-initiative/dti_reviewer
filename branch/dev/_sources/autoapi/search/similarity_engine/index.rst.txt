@@ -17,7 +17,7 @@ Module Contents
    :value: 10000
 
 
-.. py:function:: truncate_list(input_list, truncation_level=2)
+.. py:function:: aligned_author_values(values, author_count)
 
 .. py:function:: blockize(author)
 

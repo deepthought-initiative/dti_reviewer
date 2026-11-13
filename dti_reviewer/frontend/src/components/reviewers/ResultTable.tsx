@@ -18,7 +18,7 @@ import { AuthorPapers } from "./AuthorPapers"
 
 export type { SearchResults } from "./reviewerColumns"
 
-export function ResultTable({ results }: { results: SearchResults }) {
+export function ResultTable({ results, searchId }: { results: SearchResults; searchId: string }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "average_similarity", desc: true }])
   const [filter, setFilter] = useState("")
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -94,7 +94,7 @@ export function ResultTable({ results }: { results: SearchResults }) {
             value={filter} onChange={(event) => setFilter(event.target.value)} />
           {filter && <Button variant="ghost" size="icon" aria-label="Clear filter" onClick={() => setFilter("")}><X /></Button>}
         </div>
-        <ReviewerControls table={table} k={k} onKChange={(value) => { setK(value); table.setPageIndex(0) }} />
+        <ReviewerControls table={table} searchId={searchId} k={k} onKChange={(value) => { setK(value); table.setPageIndex(0) }} />
       </div>
       <ReviewerView table={table} clear={() => { setFilter(""); setColumnFilters([]) }} />
       <ScrollArea.Root className="reviewer-table-scroll" type="scroll" scrollHideDelay={800}>

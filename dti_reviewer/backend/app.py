@@ -64,6 +64,8 @@ def create_app(test_config=None):
 
     from routes.api import api_bp
     from routes.panel_presets import panel_presets_bp
+    from routes.exports import exports_bp
+    app.register_blueprint(exports_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(panel_presets_bp)
     return app

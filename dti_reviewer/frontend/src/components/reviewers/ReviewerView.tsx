@@ -1,3 +1,4 @@
+import { ReviewerExport } from "./ReviewerExport"
 import { Select } from "@/components/ui/select"
 import { useState } from "react"
 import type { Table } from "@tanstack/react-table"
@@ -8,7 +9,7 @@ import { FilterEditor, describeFilter, type ReviewerFilter } from "./ReviewerFil
 import { ReviewerSort } from "./ReviewerSort"
 import type { Author } from "./reviewerColumns"
 
-export function ReviewerControls({ table, k, onKChange }: { table: Table<Author>; k: number; onKChange: (k: number) => void }) {
+export function ReviewerControls({ table, searchId, k, onKChange }: { table: Table<Author>; searchId: string; k: number; onKChange: (k: number) => void }) {
   const [field, setField] = useState("author")
   const columns = table.getAllLeafColumns()
   const filters = table.getState().columnFilters
@@ -45,6 +46,7 @@ export function ReviewerControls({ table, k, onKChange }: { table: Table<Author>
         <p className="explorer-help">Hiding a column keeps its filters and sort rules active.</p>
       </PopoverContent>
     </Popover>
+    <ReviewerExport table={table} searchId={searchId} k={k} />
   </div>
 }
 

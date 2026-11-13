@@ -17,3 +17,5 @@ dependencies:
   - celery
   - redis-py
   - pyarrow
+  - openpyxl
+  - pytables

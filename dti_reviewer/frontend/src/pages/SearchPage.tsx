@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button"
 import "../reviewer.css"
 
 type SavedSearch = SearchProgress & {
+  id: string
   title: string
   objective: string
   abstract: string
@@ -62,7 +63,7 @@ export default function SearchPage() {
         : running ? <ReviewerProgress progress={search.state === "PROGRESS" ? search : null} />
         : search.state === "FAILURE" ? <p role="alert" className="search-error">{search.message}</p>
         : search.results && (search.results.authors.length
-          ? <ResultTable results={search.results} />
+          ? <ResultTable results={search.results} searchId={search.id} />
           : <p className="reviewer-empty">No matching people found. Try a different search or year range.</p>)}
       <div className="form-actions"><Button asChild variant="outline"><Link to="/">New search</Link></Button></div>
     </main>

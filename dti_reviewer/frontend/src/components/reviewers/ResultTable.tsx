@@ -1,14 +1,16 @@
+import * as ScrollArea from "@radix-ui/react-scroll-area"
 import { Fragment, useMemo, useState } from "react"
-import { ArrowDown, ArrowUp, ArrowsDownUp, CaretLeft, CaretRight, CheckSquare, Square, MagnifyingGlass, Info, X } from "@phosphor-icons/react"
+import { ArrowDown, ArrowUp, CaretLeft, CaretRight, MagnifyingGlass, Info, X } from "@phosphor-icons/react"
 import {
   flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel,
-  getSortedRowModel, useReactTable, type ColumnDef, type SortingState,
+  getSortedRowModel, getFacetedRowModel, getFacetedUniqueValues, useReactTable, type ColumnDef, type SortingState, type ColumnFiltersState, type VisibilityState,
 } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { reviewerColumns, type Author, type SearchResults } from "./reviewerColumns"
-import { ReviewerSort } from "./ReviewerSort"
+import { ColumnFilter, filterReviewer } from "./ReviewerFilters"
+import { ReviewerControls, ReviewerView } from "./ReviewerView"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -19,13 +21,9 @@ export type { SearchResults } from "./reviewerColumns"
 export function ResultTable({ results }: { results: SearchResults }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: "average_similarity", desc: true }])
   const [filter, setFilter] = useState("")
-  const [hideWithoutOrcid, setHideWithoutOrcid] = useState(false)
-  const columnFilters = useMemo(() => (
-    hideWithoutOrcid ? [{ id: "orcid", value: true }] : []
-  ), [hideWithoutOrcid])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ top_k_similarity: false, combined_rank: false })
   const [k, setK] = useState(3)
-  const topKSelected = sorting[0]?.id === "top_k_similarity"
-  const combinedSelected = sorting[0]?.id === "combined_rank"
   const authors = useMemo(() => results.authors.map((author) => {
     const topPapers = author.papers.slice(0, k)
     const total = topPapers.reduce((sum, paper) => sum + paper.similarity, 0)
@@ -33,35 +31,38 @@ export function ResultTable({ results }: { results: SearchResults }) {
     return { ...author, top_k_similarity: average }
   }), [results.authors, k])
   const columns = useMemo<ColumnDef<Author>[]>(() => [...reviewerColumns, {
-    accessorKey: "top_k_similarity", header: `Top ${k} average`, size: 155, minSize: 140,
+    accessorKey: "top_k_similarity", header: `Top ${k} average`, size: 190, minSize: 180,
     enableGlobalFilter: false,
     cell: ({ getValue }) => <span className="total-score">{getValue<number>().toFixed(3)}</span>,
   }, {
-    accessorKey: "combined_rank", header: "Combined rank", size: 155, minSize: 140,
+    accessorKey: "combined_rank", header: "Combined rank", size: 190, minSize: 180,
     enableGlobalFilter: false,
     sortDescFirst: false,
+    // Explicit secondary sorts take precedence over the default combined-rank tie order.
     sortingFn: (a, b) => a.original.combined_rank - b.original.combined_rank
-      || b.original.average_similarity - a.original.average_similarity
-      || a.original.orcid.localeCompare(b.original.orcid)
-      || a.original.author.localeCompare(b.original.author),
+      || (sorting.length > 1 ? 0 : b.original.average_similarity - a.original.average_similarity
+        || a.original.orcid.localeCompare(b.original.orcid)
+        || a.original.author.localeCompare(b.original.author)),
     cell: ({ row }) => <Tooltip>
       <TooltipTrigger asChild><span tabIndex={0} className="total-score">{row.original.combined_rank}</span></TooltipTrigger>
       <TooltipContent>Similarity rank {row.original.similarity_rank} + position rank {row.original.position_rank}</TooltipContent>
     </Tooltip>,
-  }], [k])
+  }], [k, sorting.length])
   const table = useReactTable({
     data: authors,
     columns,
-    state: { sorting, globalFilter: filter,
-      columnFilters, columnVisibility: {
-      top_k_similarity: topKSelected, combined_rank: combinedSelected,
-    } },
+    defaultColumn: { filterFn: filterReviewer },
+    state: { sorting, globalFilter: filter, columnFilters, columnVisibility },
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     onSortingChange: setSorting,
     onGlobalFilterChange: setFilter,
     globalFilterFn: "includesString",
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     getPaginationRowModel: getPaginationRowModel(),
     getRowCanExpand: () => true,
     columnResizeMode: "onChange",
@@ -76,7 +77,7 @@ export function ResultTable({ results }: { results: SearchResults }) {
   return (
     <div className="reviewer-results">
       <div className="results-summary">
-        <div><h2>Suggested reviewers <span>{count.toLocaleString()}</span></h2>
+        <div><h2>Suggested reviewers</h2>
           <p>From {results.counts.papers.toLocaleString()} matched papers ({results.year_start} to {results.year_end}) <Tooltip>
             <TooltipTrigger asChild><button type="button" aria-label="About similarity"><Info aria-hidden="true" /></button></TooltipTrigger>
             <TooltipContent className="max-w-xs">Similarity measures shared vocabulary between your search text and a paper using TF-IDF cosine similarity, from 0 to 1. Higher scores mean closer text matches, not a probability of expertise. Top similarity is the highest paper score; average similarity is the mean of all matched papers. Papers scoring 0.92 or higher are excluded as possible copies or close variations. All listed authors are considered. Authors without ORCIDs are grouped by name, ignoring case and extra spaces. Different people with the same name may be combined, while name variants may appear separately.</TooltipContent>
@@ -93,22 +94,11 @@ export function ResultTable({ results }: { results: SearchResults }) {
             value={filter} onChange={(event) => setFilter(event.target.value)} />
           {filter && <Button variant="ghost" size="icon" aria-label="Clear filter" onClick={() => setFilter("")}><X /></Button>}
         </div>
-        <label className="orcid-filter">
-          <input className="sr-only" type="checkbox" checked={hideWithoutOrcid} onChange={(event) => {
-            setHideWithoutOrcid(event.target.checked)
-            table.setPageIndex(0)
-          }} />
-          {hideWithoutOrcid
-            ? <CheckSquare size={20} weight="fill" aria-hidden="true" />
-            : <Square size={20} aria-hidden="true" />}
-          Hide reviewers without ORCID
-        </label>
-        <ReviewerSort sortId={sorting[0]?.id ?? ""} k={k}
-          label={String(table.getColumn(sorting[0]?.id)?.columnDef.header ?? "Sort reviewers")}
-          onSort={(id) => { setSorting([{ id, desc: id !== "combined_rank" }]); table.setPageIndex(0) }}
-          onKChange={(value) => { setK(value); table.setPageIndex(0) }} />
+        <ReviewerControls table={table} k={k} onKChange={(value) => { setK(value); table.setPageIndex(0) }} />
       </div>
-      <div className="reviewer-table-scroll" role="region" aria-label="Reviewer results" tabIndex={0}>
+      <ReviewerView table={table} clear={() => { setFilter(""); setColumnFilters([]) }} />
+      <ScrollArea.Root className="reviewer-table-scroll" type="scroll" scrollHideDelay={800}>
+        <ScrollArea.Viewport className="reviewer-table-viewport" role="region" aria-label="Reviewer results" tabIndex={0}>
         <Table className="reviewer-table" style={{ width: table.getTotalSize(), minWidth: "100%", tableLayout: "fixed" }}>
           <TableHeader>{table.getHeaderGroups().map((group) => (
             <TableRow key={group.id}>{group.headers.map((header) => {
@@ -117,10 +107,11 @@ export function ResultTable({ results }: { results: SearchResults }) {
               return (
                 <TableHead key={header.id} style={{ width: header.getSize() }}
                   aria-sort={sort === "asc" ? "ascending" : sort === "desc" ? "descending" : "none"}>
-                  <button className="column-sort" onClick={header.column.getToggleSortingHandler()}>
+                  <div className="column-heading"><button className="column-sort" onClick={header.column.getToggleSortingHandler()}>
                     {flexRender(header.column.columnDef.header, header.getContext())}
-                    {sort === "asc" ? <ArrowUp weight="bold" /> : sort === "desc" ? <ArrowDown weight="bold" /> : <ArrowsDownUp />}
+                    {sort === "asc" ? <ArrowUp weight="bold" /> : sort === "desc" ? <ArrowDown weight="bold" /> : null}
                   </button>
+                  <ColumnFilter column={header.column} /></div>
                   <div role="separator" aria-label={`Resize ${label} column`} aria-orientation="vertical"
                     aria-valuenow={header.getSize()} aria-valuemin={header.column.columnDef.minSize}
                     tabIndex={0} className="column-resizer" data-resizing={header.column.getIsResizing()}
@@ -153,13 +144,17 @@ export function ResultTable({ results }: { results: SearchResults }) {
             {count === 0 && <TableRow><TableCell colSpan={table.getVisibleLeafColumns().length}>
               <div className="empty-filter">No reviewers match these filters.<Button variant="link" onClick={() => {
                 setFilter("")
-                setHideWithoutOrcid(false)
+                setColumnFilters([])
                 table.setPageIndex(0)
               }}>Clear filters</Button></div>
             </TableCell></TableRow>}
           </TableBody>
         </Table>
-      </div>
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar className="reviewer-scrollbar" orientation="vertical"><ScrollArea.Thumb className="reviewer-scrollbar-thumb" /></ScrollArea.Scrollbar>
+        <ScrollArea.Scrollbar className="reviewer-scrollbar" orientation="horizontal"><ScrollArea.Thumb className="reviewer-scrollbar-thumb" /></ScrollArea.Scrollbar>
+        <ScrollArea.Corner />
+      </ScrollArea.Root>
       <div className="table-pagination">
         <span role="status">{first.toLocaleString()}–{last.toLocaleString()} of {count.toLocaleString()} reviewers</span>
         <div className="pagination-controls">

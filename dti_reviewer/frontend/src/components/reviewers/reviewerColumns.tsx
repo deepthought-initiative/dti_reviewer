@@ -52,20 +52,19 @@ export const reviewerColumns: ColumnDef<Author>[] = [
   },
   {
     accessorKey: "orcid", header: "ORCID", size: 205, minSize: 180,
-    filterFn: (row) => Boolean(row.original.orcid.trim()),
     cell: ({ getValue }) => getValue<string>() ? (
       <a className="orcid-link" href={`https://orcid.org/${getValue<string>()}`} target="_blank" rel="noopener noreferrer">
         {getValue<string>()}<ArrowSquareOut size={12} aria-hidden="true" />
       </a>
     ) : <span>-</span>,
   },
-  { accessorKey: "n_papers", header: "Papers", size: 85, minSize: 75, enableGlobalFilter: false },
+  { accessorKey: "n_papers", header: "Matched papers", size: 180, minSize: 170, enableGlobalFilter: false },
   {
-    accessorKey: "top_similarity", header: "Top similarity", size: 130, minSize: 125, enableGlobalFilter: false,
+    accessorKey: "top_similarity", header: "Top similarity", size: 175, minSize: 165, enableGlobalFilter: false,
     cell: ({ getValue }) => <span className="score-value">{getValue<number>().toFixed(3)}</span>,
   },
   {
-    accessorKey: "average_similarity", header: "Average similarity", size: 160, minSize: 155, enableGlobalFilter: false,
+    accessorKey: "average_similarity", header: "Average similarity", size: 200, minSize: 190, enableGlobalFilter: false,
     cell: ({ getValue }) => <span className="total-score">{getValue<number>().toFixed(3)}</span>,
   },
 ]

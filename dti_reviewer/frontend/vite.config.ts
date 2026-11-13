@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 
 const base = (process.env.APP_BASE_PATH || "/").replace(/\/+$/, "") + "/"
 const apiProxy = {
-  target: "http://localhost:5000",
+  target: "http://localhost:5001",
   rewrite: (path: string) => path.slice(base.length - 1),
 }
 
